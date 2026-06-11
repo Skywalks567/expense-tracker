@@ -44,3 +44,7 @@ example
 
 .env
 AGENTS.md
+CLAUDE.md
+
+.vscode
+.claude
