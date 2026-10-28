@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, TouchableOpacity, Modal, TextInput, Text } from 'react-native';
-import { Plus } from 'lucide-react-native';
+import { View, ActivityIndicator, TouchableOpacity, Modal, TextInput, Text, ScrollView } from 'react-native';
 
 // Import Store
 import { useExpenseStore } from '../../store/useExpenseStore';
@@ -8,9 +7,7 @@ import { useExpenseStore } from '../../store/useExpenseStore';
 // Import Komponen Modular
 import DashboardHeader from '../../components/DashboardHeader';
 import BudgetWarningCard from '../../components/BudgetWarningCard';
-import ExpenseDonutChart from '../../components/ExpenseDonutChart';
 import ExpenseHistoryList from '../../components/ExpenseHistoryList';
-import BottomSheetInput from '../../components/BottomSheetInput';
 
 export default function HomeScreen() {
   const { 
@@ -23,8 +20,6 @@ export default function HomeScreen() {
     deleteExpense 
   } = useExpenseStore();
 
-  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
-
   useEffect(() => {
     initialize();
   }, [initialize]);
@@ -36,10 +31,25 @@ export default function HomeScreen() {
   const expensesToday = expenses.filter(e => e.date.startsWith(todayString));
   const expensesThisMonth = expenses.filter(e => e.date.startsWith(thisMonthString));
 
-  const totalExpenseToday = expensesToday.reduce((sum, e) => sum + e.amount, 0);
-  const totalExpenseThisMonth = expensesThisMonth.reduce((sum, e) => sum + e.amount, 0);
+  // Pengeluaran murni (expense) untuk budget tracking
+  const totalExpenseToday = expensesToday
+    .filter(e => e.type === 'expense')
+    .reduce((sum, e) => sum + e.amount, 0);
 
-  // State untuk modal edit budget (karena Alert.prompt hanya jalan di iPhone)
+  const totalExpenseThisMonth = expensesThisMonth
+    .filter(e => e.type === 'expense')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  // Total Pemasukan & Tabungan bulan ini
+  const totalIncomeThisMonth = expensesThisMonth
+    .filter(e => e.type === 'income')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalSavingThisMonth = expensesThisMonth
+    .filter(e => e.type === 'saving')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  // State untuk modal edit budget
   const [isBudgetModalVisible, setIsBudgetModalVisible] = useState(false);
   const [tempBudgetInput, setTempBudgetInput] = useState(monthlyBudget.toString());
 
@@ -65,49 +75,33 @@ export default function HomeScreen() {
   }
 
   return (
-    <View className="flex-1 bg-zinc-950 px-6 pt-16">
-      
-      {/* 1. Header & Edit Budget */}
-      <DashboardHeader 
-        totalExpenseThisMonth={totalExpenseThisMonth} 
-        onEditBudget={handleEditBudget} 
-      />
+    <View className="flex-1 bg-zinc-950">
+      <ScrollView 
+        className="flex-1 px-6 pt-16"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        {/* 1. Header Ringkasan Saldo, Masuk, Keluar, Tabungan */}
+        <DashboardHeader 
+          totalExpenseThisMonth={totalExpenseThisMonth}
+          totalIncomeThisMonth={totalIncomeThisMonth}
+          totalSavingThisMonth={totalSavingThisMonth}
+          onEditBudget={handleEditBudget} 
+        />
 
-      {/* 2. Visualisasi Budget Harian (Merah/Hijau/Kuning) */}
-      <BudgetWarningCard 
-        monthlyBudget={monthlyBudget} 
-        totalExpenseToday={totalExpenseToday} 
-      />
+        {/* 2. Visualisasi Budget Harian (Merah/Hijau/Kuning) */}
+        <BudgetWarningCard 
+          monthlyBudget={monthlyBudget} 
+          totalExpenseToday={totalExpenseToday} 
+        />
 
-      {/* 3. Grafik Donut Pembagian Kategori Bulan Ini */}
-      <ExpenseDonutChart 
-        expenses={expensesThisMonth} 
-        categories={categories} 
-        totalExpense={totalExpenseThisMonth} 
-      />
-
-      {/* 4. Daftar Riwayat Hari Ini */}
-      <ExpenseHistoryList 
-        expenses={expensesToday} 
-        categories={categories} 
-        onDeleteExpense={deleteExpense} 
-      />
-
-      {/* 5. Tombol Plus Melayang (Floating Action Button) */}
-      <View className="absolute bottom-10 self-center z-50" style={{ elevation: 10 }}>
-        <TouchableOpacity 
-          onPress={() => setIsBottomSheetVisible(true)}
-          className="bg-blue-600 w-16 h-16 rounded-full items-center justify-center shadow-lg shadow-blue-500/50"
-        >
-          <Plus color="white" size={32} />
-        </TouchableOpacity>
-      </View>
-
-      {/* 6. Panel Input Bottom Sheet (Menggunakan Modal Bawaan) */}
-      <BottomSheetInput 
-        visible={isBottomSheetVisible} 
-        onClose={() => setIsBottomSheetVisible(false)} 
-      />
+        {/* 3. Daftar Transaksi Hari Ini */}
+        <ExpenseHistoryList 
+          expenses={expensesToday} 
+          categories={categories} 
+          onDeleteExpense={deleteExpense} 
+        />
+      </ScrollView>
 
       {/* 7. Modal Edit Budget Bulanan (Support Android & iOS) */}
       <Modal
