@@ -36,8 +36,23 @@ export default function HomeScreen() {
   const expensesToday = expenses.filter(e => e.date.startsWith(todayString));
   const expensesThisMonth = expenses.filter(e => e.date.startsWith(thisMonthString));
 
-  const totalExpenseToday = expensesToday.reduce((sum, e) => sum + e.amount, 0);
-  const totalExpenseThisMonth = expensesThisMonth.reduce((sum, e) => sum + e.amount, 0);
+  // Pengeluaran murni (expense) untuk budget tracking
+  const totalExpenseToday = expensesToday
+    .filter(e => e.type === 'expense')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalExpenseThisMonth = expensesThisMonth
+    .filter(e => e.type === 'expense')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  // Total Pemasukan & Tabungan bulan ini
+  const totalIncomeThisMonth = expensesThisMonth
+    .filter(e => e.type === 'income')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalSavingThisMonth = expensesThisMonth
+    .filter(e => e.type === 'saving')
+    .reduce((sum, e) => sum + e.amount, 0);
 
   // State untuk modal edit budget (karena Alert.prompt hanya jalan di iPhone)
   const [isBudgetModalVisible, setIsBudgetModalVisible] = useState(false);
@@ -67,9 +82,11 @@ export default function HomeScreen() {
   return (
     <View className="flex-1 bg-zinc-950 px-6 pt-16">
       
-      {/* 1. Header & Edit Budget */}
+      {/* 1. Header Ringkasan Saldo, Masuk, Keluar, Tabungan */}
       <DashboardHeader 
-        totalExpenseThisMonth={totalExpenseThisMonth} 
+        totalExpenseThisMonth={totalExpenseThisMonth}
+        totalIncomeThisMonth={totalIncomeThisMonth}
+        totalSavingThisMonth={totalSavingThisMonth}
         onEditBudget={handleEditBudget} 
       />
 
@@ -81,7 +98,7 @@ export default function HomeScreen() {
 
       {/* 3. Grafik Donut Pembagian Kategori Bulan Ini */}
       <ExpenseDonutChart 
-        expenses={expensesThisMonth} 
+        expenses={expensesThisMonth.filter(e => e.type === 'expense')} 
         categories={categories} 
         totalExpense={totalExpenseThisMonth} 
       />

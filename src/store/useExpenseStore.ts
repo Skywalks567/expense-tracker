@@ -3,12 +3,15 @@ import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, setDoc,
 import { db, auth, loginAnonymously } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
+export type TransactionType = 'expense' | 'income' | 'saving';
+
 export type Category = {
   id: string;
   name: string;
   icon: string;
   color: string;
   group: string;
+  type: TransactionType;
 };
 
 export type Expense = {
@@ -17,6 +20,7 @@ export type Expense = {
   categoryId: string;
   date: string;
   note?: string;
+  type: TransactionType;
 };
 
 type ExpenseState = {
@@ -26,39 +30,52 @@ type ExpenseState = {
   userId: string | null;
   monthlyBudget: number;
   initialize: () => void;
-  addExpense: (amount: number, categoryId: string, note?: string) => Promise<void>;
+  addExpense: (amount: number, categoryId: string, note?: string, type?: TransactionType) => Promise<void>;
   deleteExpense: (expenseId: string) => Promise<void>;
   setMonthlyBudget: (amount: number) => Promise<void>;
 };
 
 const defaultCategories: Category[] = [
+  // --- PENGELUARAN (EXPENSE) ---
   // Kebutuhan Pokok
-  { id: 'makan_minum', name: 'Makanan & Minuman', icon: '🍔', color: '#F59E0B', group: 'Kebutuhan Pokok' },
-  { id: 'belanja_bulanan', name: 'Belanja Bulanan', icon: '🛒', color: '#10B981', group: 'Kebutuhan Pokok' },
-  { id: 'tempat_tinggal', name: 'Tempat Tinggal', icon: '🏠', color: '#8B5CF6', group: 'Kebutuhan Pokok' },
-  { id: 'tagihan', name: 'Tagihan', icon: '⚡', color: '#EAB308', group: 'Kebutuhan Pokok' },
+  { id: 'makan_minum', name: 'Makanan & Minuman', icon: '🍔', color: '#F59E0B', group: 'Kebutuhan Pokok', type: 'expense' },
+  { id: 'belanja_bulanan', name: 'Belanja Bulanan', icon: '🛒', color: '#10B981', group: 'Kebutuhan Pokok', type: 'expense' },
+  { id: 'tempat_tinggal', name: 'Tempat Tinggal', icon: '🏠', color: '#8B5CF6', group: 'Kebutuhan Pokok', type: 'expense' },
+  { id: 'tagihan', name: 'Tagihan & Listrik', icon: '⚡', color: '#EAB308', group: 'Kebutuhan Pokok', type: 'expense' },
   
   // Transportasi
-  { id: 'bensin', name: 'Bensin', icon: '⛽', color: '#EF4444', group: 'Transportasi' },
-  { id: 'ojol', name: 'Ojek Online', icon: '🛵', color: '#3B82F6', group: 'Transportasi' },
-  { id: 'transportasi_umum', name: 'Transportasi Umum', icon: '🚌', color: '#06B6D4', group: 'Transportasi' },
+  { id: 'bensin', name: 'Bensin', icon: '⛽', color: '#EF4444', group: 'Transportasi', type: 'expense' },
+  { id: 'ojol', name: 'Ojek Online', icon: '🛵', color: '#3B82F6', group: 'Transportasi', type: 'expense' },
+  { id: 'transportasi_umum', name: 'Transportasi Umum', icon: '🚌', color: '#06B6D4', group: 'Transportasi', type: 'expense' },
   
   // Gaya Hidup
-  { id: 'nongkrong', name: 'Nongkrong/Kafe', icon: '☕', color: '#D946EF', group: 'Gaya Hidup' },
-  { id: 'belanja', name: 'Belanja', icon: '🛍️', color: '#EC4899', group: 'Gaya Hidup' },
-  { id: 'hiburan', name: 'Hiburan', icon: '🎬', color: '#8B5CF6', group: 'Gaya Hidup' },
-  { id: 'liburan', name: 'Liburan', icon: '✈️', color: '#0EA5E9', group: 'Gaya Hidup' },
+  { id: 'nongkrong', name: 'Nongkrong/Kafe', icon: '☕', color: '#D946EF', group: 'Gaya Hidup', type: 'expense' },
+  { id: 'belanja', name: 'Belanja', icon: '🛍️', color: '#EC4899', group: 'Gaya Hidup', type: 'expense' },
+  { id: 'hiburan', name: 'Hiburan', icon: '🎬', color: '#8B5CF6', group: 'Gaya Hidup', type: 'expense' },
+  { id: 'liburan', name: 'Liburan', icon: '✈️', color: '#0EA5E9', group: 'Gaya Hidup', type: 'expense' },
   
   // Kesehatan
-  { id: 'obat_klinik', name: 'Obat/Klinik', icon: '💊', color: '#14B8A6', group: 'Kesehatan' },
-  { id: 'perawatan_diri', name: 'Perawatan Diri', icon: '💆‍♂️', color: '#F43F5E', group: 'Kesehatan' },
-  { id: 'olahraga', name: 'Olahraga', icon: '🏃‍♂️', color: '#84CC16', group: 'Kesehatan' },
+  { id: 'obat_klinik', name: 'Obat/Klinik', icon: '💊', color: '#14B8A6', group: 'Kesehatan', type: 'expense' },
+  { id: 'perawatan_diri', name: 'Perawatan Diri', icon: '💆‍♂️', color: '#F43F5E', group: 'Kesehatan', type: 'expense' },
+  { id: 'olahraga', name: 'Olahraga', icon: '🏃‍♂️', color: '#84CC16', group: 'Kesehatan', type: 'expense' },
   
-  // Masa Depan
-  { id: 'tabungan', name: 'Tabungan', icon: '💰', color: '#22C55E', group: 'Masa Depan' },
-  { id: 'investasi', name: 'Investasi', icon: '📈', color: '#6366F1', group: 'Masa Depan' },
-  { id: 'cicilan_hutang', name: 'Cicilan/Hutang', icon: '💳', color: '#F97316', group: 'Masa Depan' },
-  { id: 'sosial_sedekah', name: 'Sosial/Sedekah', icon: '🤲', color: '#06B6D4', group: 'Masa Depan' },
+  // Kewajiban
+  { id: 'cicilan_hutang', name: 'Cicilan/Hutang', icon: '💳', color: '#F97316', group: 'Kewajiban', type: 'expense' },
+  { id: 'sosial_sedekah', name: 'Sosial/Sedekah', icon: '🤲', color: '#06B6D4', group: 'Kewajiban', type: 'expense' },
+
+  // --- PEMASUKAN (INCOME) ---
+  { id: 'gaji', name: 'Gaji Bulanan', icon: '💼', color: '#10B981', group: 'Pemasukan', type: 'income' },
+  { id: 'freelance_bisnis', name: 'Freelance / Bisnis', icon: '💻', color: '#06B6D4', group: 'Pemasukan', type: 'income' },
+  { id: 'bonus_thr', name: 'Bonus / THR', icon: '🎁', color: '#F59E0B', group: 'Pemasukan', type: 'income' },
+  { id: 'passive_income', name: 'Dividen / Bunga', icon: '📈', color: '#8B5CF6', group: 'Pemasukan', type: 'income' },
+  { id: 'pemasukan_lain', name: 'Pemasukan Lain', icon: '💵', color: '#14B8A6', group: 'Pemasukan', type: 'income' },
+
+  // --- TABUNGAN & INVESTASI (SAVING) ---
+  { id: 'dana_darurat', name: 'Dana Darurat', icon: '🛡️', color: '#10B981', group: 'Tabungan', type: 'saving' },
+  { id: 'tabungan_impian', name: 'Tabungan Impian', icon: '🎯', color: '#3B82F6', group: 'Tabungan', type: 'saving' },
+  { id: 'saham_reksadana', name: 'Investasi Saham/Reksadana', icon: '📈', color: '#6366F1', group: 'Tabungan', type: 'saving' },
+  { id: 'emas_mulia', name: 'Emas / Logam Mulia', icon: '🪙', color: '#F59E0B', group: 'Tabungan', type: 'saving' },
+  { id: 'tabungan_umum', name: 'Tabungan Bank', icon: '💰', color: '#14B8A6', group: 'Tabungan', type: 'saving' },
 ];
 
 let unsubscribeSnapshot: () => void;
@@ -91,10 +108,24 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
         if (unsubscribeSnapshot) unsubscribeSnapshot();
         
         unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-          const expensesData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Expense[];
+          const expensesData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            let itemType: TransactionType = data.type || 'expense';
+            // Backward compatibility untuk data lama yang belum memiliki field 'type'
+            if (!data.type) {
+              if (data.categoryId === 'tabungan' || data.categoryId === 'investasi' || data.categoryId?.includes('saving')) {
+                itemType = 'saving';
+              }
+            }
+            return {
+              id: doc.id,
+              amount: data.amount || 0,
+              categoryId: data.categoryId,
+              date: data.date,
+              note: data.note || '',
+              type: itemType,
+            };
+          }) as Expense[];
           set({ expenses: expensesData, isLoading: false });
         });
       } else {
@@ -103,9 +134,12 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
     });
   },
 
-  addExpense: async (amount, categoryId, note) => {
-    const { userId } = get();
+  addExpense: async (amount, categoryId, note, type) => {
+    const { userId, categories } = get();
     if (!userId) return;
+
+    const cat = categories.find(c => c.id === categoryId);
+    const resolvedType: TransactionType = type || cat?.type || 'expense';
 
     const expensesRef = collection(db, 'users', userId, 'expenses');
     await addDoc(expensesRef, {
@@ -113,6 +147,7 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
       categoryId,
       date: new Date().toISOString(),
       note: note || '',
+      type: resolvedType,
     });
   },
 
