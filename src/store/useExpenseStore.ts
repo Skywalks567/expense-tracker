@@ -29,10 +29,19 @@ type ExpenseState = {
   isLoading: boolean;
   userId: string | null;
   monthlyBudget: number;
+  alarmTime: string;
+  isBalanceHidden: boolean;
+  isInputModalOpen: boolean;
+  inputInitialType: TransactionType;
+  inputInitialCategoryId: string | null;
   initialize: () => void;
   addExpense: (amount: number, categoryId: string, note?: string, type?: TransactionType) => Promise<void>;
   deleteExpense: (expenseId: string) => Promise<void>;
   setMonthlyBudget: (amount: number) => Promise<void>;
+  setAlarmTime: (time: string) => void;
+  toggleBalanceHidden: () => void;
+  openInputModal: (type?: TransactionType, categoryId?: string | null) => void;
+  closeInputModal: () => void;
 };
 
 const defaultCategories: Category[] = [
@@ -86,6 +95,25 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   isLoading: true,
   userId: null,
   monthlyBudget: 3000000, // Default 3 Juta
+  alarmTime: '20:00',
+  isBalanceHidden: false,
+  isInputModalOpen: false,
+  inputInitialType: 'expense',
+  inputInitialCategoryId: null,
+
+  setAlarmTime: (time: string) => set({ alarmTime: time }),
+  toggleBalanceHidden: () => set(state => ({ isBalanceHidden: !state.isBalanceHidden })),
+  openInputModal: (type = 'expense', categoryId = null) =>
+    set({
+      isInputModalOpen: true,
+      inputInitialType: type,
+      inputInitialCategoryId: categoryId,
+    }),
+  closeInputModal: () =>
+    set({
+      isInputModalOpen: false,
+      inputInitialCategoryId: null,
+    }),
 
   initialize: () => {
     onAuthStateChanged(auth, async (user) => {

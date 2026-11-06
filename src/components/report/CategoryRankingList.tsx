@@ -18,24 +18,25 @@ export default function CategoryRankingList({ rankings }: Props) {
   if (rankings.length === 0) return null;
 
   return (
-    <View className="mt-4 pt-4 border-t border-zinc-800">
-      <Text className="text-zinc-400 text-xs font-bold uppercase mb-3">
+    <View className="mt-4 pt-4 border-t border-slate-100">
+      <Text className="text-slate-400 text-[10px] font-extrabold uppercase tracking-wider mb-3">
         Pos Pengeluaran Terbesar
       </Text>
-      {rankings.map(cat => (
+      {rankings.map((cat) => (
         <View key={cat.id} className="mb-3">
-          <View className="flex-row justify-between items-center mb-1">
-            <Text className="text-zinc-200 text-xs font-medium">
+          <View className="flex-row justify-between items-center mb-1.5">
+            <Text className="text-slate-800 text-xs font-bold">
               {cat.icon} {cat.name}
             </Text>
-            <Text className="text-zinc-400 text-xs font-bold">
-              Rp {cat.total.toLocaleString('id-ID')} ({cat.percentage}%)
+            <Text className="text-slate-500 text-xs font-bold">
+              Rp {cat.total.toLocaleString('id-ID')}{' '}
+              <Text className="text-indigo-600">({cat.percentage}%)</Text>
             </Text>
           </View>
-          <View className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-            <View 
-              className="h-full rounded-full" 
-              style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }} 
+          <View className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+            <View
+              className="h-full rounded-full"
+              style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
             />
           </View>
         </View>

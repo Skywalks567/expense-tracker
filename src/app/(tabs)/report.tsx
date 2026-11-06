@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, StatusBar } from 'react-native';
 import { useExpenseStore, TransactionType } from '../../store/useExpenseStore';
 import ExpenseDonutChart from '../../components/ExpenseDonutChart';
 import SavingsHealthCard from '../../components/report/SavingsHealthCard';
 import CashFlowOverviewCard from '../../components/report/CashFlowOverviewCard';
-import CategoryRankingList, { CategoryRankingItem } from '../../components/report/CategoryRankingList';
+import CategoryRankingList, {
+  CategoryRankingItem,
+} from '../../components/report/CategoryRankingList';
 import MonthlyTransactionList from '../../components/report/MonthlyTransactionList';
 
 export default function ReportScreen() {
@@ -13,87 +15,97 @@ export default function ReportScreen() {
 
   // Format bulan & tahun saat ini dalam Bahasa Indonesia
   const now = new Date();
-  const currentMonthName = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  const currentMonthName = now.toLocaleDateString('id-ID', {
+    month: 'long',
+    year: 'numeric',
+  });
   const thisMonthString = now.toISOString().substring(0, 7);
 
   // Filter transaksi bulan berjalan
-  const monthlyExpenses = expenses.filter(e => e.date.startsWith(thisMonthString));
+  const monthlyExpenses = expenses.filter((e) => e.date.startsWith(thisMonthString));
 
   // Agregasi finansial
   const totalExpense = monthlyExpenses
-    .filter(e => e.type === 'expense')
+    .filter((e) => e.type === 'expense')
     .reduce((sum, e) => sum + e.amount, 0);
 
   const totalIncome = monthlyExpenses
-    .filter(e => e.type === 'income')
+    .filter((e) => e.type === 'income')
     .reduce((sum, e) => sum + e.amount, 0);
 
   const totalSaving = monthlyExpenses
-    .filter(e => e.type === 'saving')
+    .filter((e) => e.type === 'saving')
     .reduce((sum, e) => sum + e.amount, 0);
 
-  const savingsRate = totalIncome > 0 ? Math.round((totalSaving / totalIncome) * 100) : 0;
+  const savingsRate =
+    totalIncome > 0 ? Math.round((totalSaving / totalIncome) * 100) : 0;
 
   // Filter daftar transaksi bulan ini
-  const filteredList = monthlyExpenses.filter(e => {
+  const filteredList = monthlyExpenses.filter((e) => {
     if (filterType === 'all') return true;
     return e.type === filterType;
   });
 
   // Ranking Kategori Pengeluaran Terbesar
   const expenseRankings: CategoryRankingItem[] = categories
-    .filter(c => c.type === 'expense')
-    .map(cat => {
+    .filter((c) => c.type === 'expense')
+    .map((cat) => {
       const total = monthlyExpenses
-        .filter(e => e.categoryId === cat.id && e.type === 'expense')
+        .filter((e) => e.categoryId === cat.id && e.type === 'expense')
         .reduce((sum, e) => sum + e.amount, 0);
       const percentage = totalExpense > 0 ? Math.round((total / totalExpense) * 100) : 0;
       return { ...cat, total, percentage };
     })
-    .filter(c => c.total > 0)
+    .filter((c) => c.total > 0)
     .sort((a, b) => b.total - a.total);
 
   return (
-    <View className="flex-1 bg-zinc-950">
-      <ScrollView 
-        className="flex-1 px-6 pt-16" 
+    <View className="flex-1 bg-slate-50">
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+
+      <ScrollView
+        className="flex-1 px-5 pt-12"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header Laporan */}
-        <View className="mb-6">
-          <Text className="text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1">
+        <View className="mb-5 pt-2">
+          <Text className="text-slate-400 text-[11px] uppercase tracking-wider font-extrabold mb-1">
             Laporan Finansial
           </Text>
-          <Text className="text-white text-3xl font-extrabold">{currentMonthName}</Text>
+          <Text className="text-slate-900 text-2xl font-black">{currentMonthName}</Text>
         </View>
 
         {/* 1. Evaluasi Rasio Tabungan */}
         <SavingsHealthCard savingsRate={savingsRate} totalSaving={totalSaving} />
 
         {/* 2. Arus Kas Bulanan */}
-        <CashFlowOverviewCard 
-          totalIncome={totalIncome} 
-          totalExpense={totalExpense} 
-          totalSaving={totalSaving} 
+        <CashFlowOverviewCard
+          totalIncome={totalIncome}
+          totalExpense={totalExpense}
+          totalSaving={totalSaving}
         />
 
         {/* 3. Grafik Donut & Ranking Pengeluaran */}
-        <View className="bg-zinc-900 border border-zinc-800 p-5 rounded-3xl mb-6">
-          <Text className="text-white font-bold text-base mb-1">Distribusi Pengeluaran</Text>
-          <Text className="text-zinc-400 text-xs mb-3">Persentase pengeluaran berdasarkan kategori</Text>
-          
-          <ExpenseDonutChart 
-            expenses={monthlyExpenses.filter(e => e.type === 'expense')} 
-            categories={categories} 
-            totalExpense={totalExpense} 
+        <View className="bg-white border border-slate-200/90 p-5 rounded-3xl mb-5 shadow-sm">
+          <Text className="text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-1">
+            Distribusi Pengeluaran
+          </Text>
+          <Text className="text-slate-400 text-xs mb-3">
+            Persentase pengeluaran berdasarkan kategori
+          </Text>
+
+          <ExpenseDonutChart
+            expenses={monthlyExpenses.filter((e) => e.type === 'expense')}
+            categories={categories}
+            totalExpense={totalExpense}
           />
 
           <CategoryRankingList rankings={expenseRankings} />
         </View>
 
         {/* 4. Daftar Riwayat Transaksi Bulanan */}
-        <MonthlyTransactionList 
+        <MonthlyTransactionList
           transactions={filteredList}
           categories={categories}
           filterType={filterType}
