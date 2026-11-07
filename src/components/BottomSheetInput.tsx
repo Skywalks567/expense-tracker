@@ -88,7 +88,8 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
           <TouchableOpacity
             onPress={handleSave}
             disabled={!amount || !selectedCategoryId}
-            className={`p-4 rounded-2xl items-center shadow-lg ${amount && selectedCategoryId ? typeConfig.btnBg : 'bg-slate-200'}`}
+            className={`p-4 rounded-2xl items-center ${amount && selectedCategoryId ? typeConfig.btnBg : 'bg-slate-200'}`}
+            style={amount && selectedCategoryId ? { elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4 } : undefined}
           >
             <Text className={`font-black text-base ${amount && selectedCategoryId ? 'text-white' : 'text-slate-400'}`}>
               {typeConfig.btnText}

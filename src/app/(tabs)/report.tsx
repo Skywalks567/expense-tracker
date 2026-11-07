@@ -61,7 +61,7 @@ export default function ReportScreen() {
 
   return (
     <View className="flex-1 bg-slate-50">
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      <StatusBar barStyle="dark-content" />
 
       <ScrollView
         className="flex-1 px-5 pt-12"
