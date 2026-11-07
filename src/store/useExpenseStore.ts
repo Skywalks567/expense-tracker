@@ -43,6 +43,7 @@ type ExpenseState = {
   openInputModal: (type?: TransactionType, categoryId?: string | null) => void;
   closeInputModal: () => void;
   resetAllData: () => Promise<void>;
+  importExpenses: (importedExpenses: Expense[]) => Promise<void>;
 };
 
 const defaultCategories: Category[] = [
@@ -208,6 +209,34 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
         await deleteDoc(expenseRef);
       } catch (err) {
         console.error('Error resetting item:', err);
+      }
+    }
+  },
+
+  importExpenses: async (importedExpenses: Expense[]) => {
+    const { userId } = get();
+    // Validasi data
+    const validItems = importedExpenses.filter(e => e && e.amount > 0 && e.categoryId);
+    if (validItems.length === 0) return;
+
+    set(state => ({
+      expenses: [...validItems, ...state.expenses]
+    }));
+
+    if (!userId) return;
+
+    for (const item of validItems) {
+      try {
+        const expensesRef = collection(db, 'users', userId, 'expenses');
+        await addDoc(expensesRef, {
+          amount: item.amount,
+          categoryId: item.categoryId,
+          date: item.date || new Date().toISOString(),
+          note: item.note || '',
+          type: item.type || 'expense',
+        });
+      } catch (err) {
+        console.error('Error importing expense:', err);
       }
     }
   },

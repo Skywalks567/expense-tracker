@@ -17,7 +17,7 @@ import SmartAlarmCard from '../../components/SmartAlarmCard';
 import BudgetWarningCard from '../../components/BudgetWarningCard';
 import ExpenseHistoryList from '../../components/ExpenseHistoryList';
 import QuickSearchModal from '../../components/QuickSearchModal';
-import SettingsModal from '../../components/SettingsModal';
+import AlarmPickerModal from '../../components/AlarmPickerModal';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -29,6 +29,7 @@ export default function HomeScreen() {
     monthlyBudget,
     deleteExpense,
     alarmTime,
+    setAlarmTime,
   } = useExpenseStore();
 
   useEffect(() => {
@@ -60,9 +61,9 @@ export default function HomeScreen() {
     .filter((e) => e.type === 'saving')
     .reduce((sum, e) => sum + e.amount, 0);
 
-  // State untuk modal pencarian dan pengaturan
+  // State untuk modal pencarian dan pemilih jam alarm
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isAlarmPickerOpen, setIsAlarmPickerOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -84,31 +85,31 @@ export default function HomeScreen() {
         {/* 1. Header Bar: Sapaan Waktu Dinamis + Tanggal + [ 🔍 Cari ] & [ ⚙️ Pengaturan ] */}
         <DashboardHeader
           onOpenSearch={() => setIsSearchModalOpen(true)}
-          onOpenSettings={() => setIsSettingsModalOpen(true)}
+          onOpenSettings={() => router.push('/settings')}
         />
 
-        {/* 2. Hero Card Saldo: Midnight Indigo Theme + Toggle Mata + Badge Bulan Dinamis */}
+        {/* 2. Hero Card Saldo: Midnight Indigo + Sparkline Tren 7 Hari + 3 Chip Arus Kas */}
         <HeroBalanceCard
           totalExpenseThisMonth={totalExpenseThisMonth}
           totalIncomeThisMonth={totalIncomeThisMonth}
           totalSavingThisMonth={totalSavingThisMonth}
+          expenses={expenses}
         />
 
-        {/* 3. Smart Alarm Widget: Status Dinamis Aktif vs Selesai */}
+        {/* 3. Smart Alarm Widget: Status Dinamis (Ketuk untuk Ubah Jam Alarm) */}
         <SmartAlarmCard
           alarmTime={alarmTime}
           hasTransactionsToday={expensesToday.length > 0}
-          onPress={() => setIsSettingsModalOpen(true)}
+          onPress={() => setIsAlarmPickerOpen(true)}
         />
 
-        {/* 4. Batas Pengeluaran Harian */}
+        {/* 4. Batas Pengeluaran Harian: Spidometer Read-Only */}
         <BudgetWarningCard
           monthlyBudget={monthlyBudget}
           totalExpenseToday={totalExpenseToday}
-          onEditBudget={() => setIsSettingsModalOpen(true)}
         />
 
-        {/* 5. Transaksi Hari Ini: Dibatasi Maksimal 3 Transaksi */}
+        {/* 5. Transaksi Hari Ini: Maksimal 3 Transaksi */}
         <ExpenseHistoryList
           expenses={expensesToday}
           categories={categories}
@@ -125,10 +126,12 @@ export default function HomeScreen() {
         categories={categories}
       />
 
-      {/* Modal Pengaturan Terpusat */}
-      <SettingsModal
-        visible={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
+      {/* Modal Khusus Pemilih Jam Alarm (Popup Terfokus) */}
+      <AlarmPickerModal
+        visible={isAlarmPickerOpen}
+        currentAlarmTime={alarmTime}
+        onClose={() => setIsAlarmPickerOpen(false)}
+        onSave={(newTime) => setAlarmTime(newTime)}
       />
     </View>
   );

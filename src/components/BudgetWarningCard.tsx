@@ -1,17 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Target, AlertCircle } from 'lucide-react-native';
+import { View, Text } from 'react-native';
+import { Target } from 'lucide-react-native';
 
 type Props = {
   monthlyBudget: number;
   totalExpenseToday: number;
-  onEditBudget?: () => void;
 };
 
 export default function BudgetWarningCard({
   monthlyBudget,
   totalExpenseToday,
-  onEditBudget,
 }: Props) {
   // Hitung jumlah hari di bulan ini
   const date = new Date();
@@ -43,11 +41,7 @@ export default function BudgetWarningCard({
   }
 
   return (
-    <TouchableOpacity
-      activeOpacity={onEditBudget ? 0.8 : 1}
-      onPress={onEditBudget}
-      className="bg-white border border-slate-200/80 rounded-2xl p-4 mb-5 shadow-sm"
-    >
+    <View className="bg-white border border-slate-200/80 rounded-2xl p-4 mb-5 shadow-sm">
       <View className="flex-row justify-between items-center mb-2">
         <View className="flex-row items-center gap-2">
           <View className="w-7 h-7 rounded-lg bg-indigo-50 items-center justify-center">
@@ -88,6 +82,6 @@ export default function BudgetWarningCard({
           </Text>
         </Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
