@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  ActivityIndicator,
-  ScrollView,
-  StatusBar,
-} from 'react-native';
+import { View, ActivityIndicator, ScrollView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
-
-// Import Store
 import { useExpenseStore } from '../../store/useExpenseStore';
-
-// Import Komponen Modular
+import { useDashboardFinancials } from '../../hooks/useDashboardFinancials';
 import DashboardHeader from '../../components/DashboardHeader';
 import HeroBalanceCard from '../../components/HeroBalanceCard';
 import SmartAlarmCard from '../../components/SmartAlarmCard';
@@ -36,32 +28,14 @@ export default function HomeScreen() {
     initialize();
   }, [initialize]);
 
-  // Kalkulasi data hari ini & bulan ini
-  const todayString = new Date().toISOString().split('T')[0];
-  const thisMonthString = todayString.substring(0, 7); // Format: "YYYY-MM"
+  const {
+    expensesToday,
+    totalExpenseToday,
+    totalExpenseThisMonth,
+    totalIncomeThisMonth,
+    totalSavingThisMonth,
+  } = useDashboardFinancials(expenses);
 
-  const expensesToday = expenses.filter((e) => e.date.startsWith(todayString));
-  const expensesThisMonth = expenses.filter((e) => e.date.startsWith(thisMonthString));
-
-  // Pengeluaran murni (expense) untuk budget tracking
-  const totalExpenseToday = expensesToday
-    .filter((e) => e.type === 'expense')
-    .reduce((sum, e) => sum + e.amount, 0);
-
-  const totalExpenseThisMonth = expensesThisMonth
-    .filter((e) => e.type === 'expense')
-    .reduce((sum, e) => sum + e.amount, 0);
-
-  // Total Pemasukan & Tabungan bulan ini
-  const totalIncomeThisMonth = expensesThisMonth
-    .filter((e) => e.type === 'income')
-    .reduce((sum, e) => sum + e.amount, 0);
-
-  const totalSavingThisMonth = expensesThisMonth
-    .filter((e) => e.type === 'saving')
-    .reduce((sum, e) => sum + e.amount, 0);
-
-  // State untuk modal pencarian dan pemilih jam alarm
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isAlarmPickerOpen, setIsAlarmPickerOpen] = useState(false);
 
@@ -82,13 +56,11 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* 1. Header Bar: Sapaan Waktu Dinamis + Tanggal + [ 🔍 Cari ] & [ ⚙️ Pengaturan ] */}
         <DashboardHeader
           onOpenSearch={() => setIsSearchModalOpen(true)}
           onOpenSettings={() => router.push('/settings')}
         />
 
-        {/* 2. Hero Card Saldo: Midnight Indigo + Sparkline Tren 7 Hari + 3 Chip Arus Kas */}
         <HeroBalanceCard
           totalExpenseThisMonth={totalExpenseThisMonth}
           totalIncomeThisMonth={totalIncomeThisMonth}
@@ -96,20 +68,17 @@ export default function HomeScreen() {
           expenses={expenses}
         />
 
-        {/* 3. Smart Alarm Widget: Status Dinamis (Ketuk untuk Ubah Jam Alarm) */}
         <SmartAlarmCard
           alarmTime={alarmTime}
           hasTransactionsToday={expensesToday.length > 0}
           onPress={() => setIsAlarmPickerOpen(true)}
         />
 
-        {/* 4. Batas Pengeluaran Harian: Spidometer Read-Only */}
         <BudgetWarningCard
           monthlyBudget={monthlyBudget}
           totalExpenseToday={totalExpenseToday}
         />
 
-        {/* 5. Transaksi Hari Ini: Maksimal 3 Transaksi */}
         <ExpenseHistoryList
           expenses={expensesToday}
           categories={categories}
@@ -118,7 +87,6 @@ export default function HomeScreen() {
         />
       </ScrollView>
 
-      {/* Modal Pencarian Cepat */}
       <QuickSearchModal
         visible={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
@@ -126,7 +94,6 @@ export default function HomeScreen() {
         categories={categories}
       />
 
-      {/* Modal Khusus Pemilih Jam Alarm (Popup Terfokus) */}
       <AlarmPickerModal
         visible={isAlarmPickerOpen}
         currentAlarmTime={alarmTime}
