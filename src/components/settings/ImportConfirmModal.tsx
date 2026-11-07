@@ -1,23 +1,19 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, Modal, TouchableOpacity } from 'react-native';
 import { Upload } from 'lucide-react-native';
 
 type Props = {
   visible: boolean;
-  importJsonInput: string;
-  importError: string | null;
-  onChangeInput: (val: string) => void;
+  itemCount: number;
   onClose: () => void;
-  onSubmit: () => void;
+  onConfirm: () => void;
 };
 
-export default function ImportRestoreModal({
+export default function ImportConfirmModal({
   visible,
-  importJsonInput,
-  importError,
-  onChangeInput,
+  itemCount,
   onClose,
-  onSubmit,
+  onConfirm,
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -28,32 +24,13 @@ export default function ImportRestoreModal({
               <Upload size={20} color="#059669" />
             </View>
             <Text className="text-slate-900 text-base font-extrabold">
-              Restore Data Catatan
+              Pulihkan Data Cadangan?
             </Text>
           </View>
 
-          <Text className="text-slate-500 text-xs mb-3">
-            Tempel (*paste*) teks cadangan JSON yang Anda miliki ke kolom di bawah ini.
+          <Text className="text-slate-500 text-xs mb-5 leading-relaxed">
+            Ditemukan <Text className="font-bold text-slate-800">{itemCount} catatan transaksi</Text> di dalam file cadangan. Catatan ini akan ditambahkan ke database lokal Anda.
           </Text>
-
-          {importError && (
-            <View className="bg-rose-50 border border-rose-200 p-2.5 rounded-xl mb-3">
-              <Text className="text-rose-600 text-[11px] font-bold">
-                {importError}
-              </Text>
-            </View>
-          )}
-
-          <View className="bg-slate-50 border border-slate-200 rounded-2xl p-3 mb-4 h-32">
-            <TextInput
-              value={importJsonInput}
-              onChangeText={onChangeInput}
-              placeholder="[ { amount: 50000, categoryId: 'makan_minum', ... } ]"
-              placeholderTextColor="#94A3B8"
-              multiline
-              className="flex-1 text-slate-800 text-xs font-mono p-0"
-            />
-          </View>
 
           <View className="flex-row justify-end gap-2.5">
             <TouchableOpacity
@@ -63,7 +40,7 @@ export default function ImportRestoreModal({
               <Text className="text-xs text-slate-500 font-bold">Batal</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={onSubmit}
+              onPress={onConfirm}
               className="bg-emerald-600 px-5 py-2.5 rounded-xl shadow-sm"
             >
               <Text className="text-white text-xs font-bold">Terapkan Pemulihan</Text>
