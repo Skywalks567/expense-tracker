@@ -42,6 +42,7 @@ type ExpenseState = {
   toggleBalanceHidden: () => void;
   openInputModal: (type?: TransactionType, categoryId?: string | null) => void;
   closeInputModal: () => void;
+  resetAllData: () => Promise<void>;
 };
 
 const defaultCategories: Category[] = [
@@ -180,11 +181,35 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   },
 
   deleteExpense: async (expenseId) => {
+    // Optimistic UI update agar langsung hilang tanpa delay
+    set(state => ({
+      expenses: state.expenses.filter(e => e.id !== expenseId)
+    }));
+
     const { userId } = get();
     if (!userId) return;
 
-    const expenseRef = doc(db, 'users', userId, 'expenses', expenseId);
-    await deleteDoc(expenseRef);
+    try {
+      const expenseRef = doc(db, 'users', userId, 'expenses', expenseId);
+      await deleteDoc(expenseRef);
+    } catch (err) {
+      console.error('Error deleting expense:', err);
+    }
+  },
+
+  resetAllData: async () => {
+    const { userId, expenses } = get();
+    set({ expenses: [] });
+    if (!userId) return;
+
+    for (const exp of expenses) {
+      try {
+        const expenseRef = doc(db, 'users', userId, 'expenses', exp.id);
+        await deleteDoc(expenseRef);
+      } catch (err) {
+        console.error('Error resetting item:', err);
+      }
+    }
   },
 
   setMonthlyBudget: async (amount: number) => {

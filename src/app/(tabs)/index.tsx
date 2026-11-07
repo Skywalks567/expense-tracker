@@ -2,13 +2,10 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   ActivityIndicator,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Text,
   ScrollView,
   StatusBar,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 
 // Import Store
 import { useExpenseStore } from '../../store/useExpenseStore';
@@ -18,22 +15,20 @@ import DashboardHeader from '../../components/DashboardHeader';
 import HeroBalanceCard from '../../components/HeroBalanceCard';
 import SmartAlarmCard from '../../components/SmartAlarmCard';
 import BudgetWarningCard from '../../components/BudgetWarningCard';
-import CategoryQuickChips from '../../components/CategoryQuickChips';
 import ExpenseHistoryList from '../../components/ExpenseHistoryList';
-import AlarmPickerModal from '../../components/AlarmPickerModal';
+import QuickSearchModal from '../../components/QuickSearchModal';
+import SettingsModal from '../../components/SettingsModal';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const {
     initialize,
     expenses,
     categories,
     isLoading,
     monthlyBudget,
-    setMonthlyBudget,
     deleteExpense,
     alarmTime,
-    setAlarmTime,
-    openInputModal,
   } = useExpenseStore();
 
   useEffect(() => {
@@ -65,23 +60,9 @@ export default function HomeScreen() {
     .filter((e) => e.type === 'saving')
     .reduce((sum, e) => sum + e.amount, 0);
 
-  // State untuk modal edit budget & alarm
-  const [isBudgetModalVisible, setIsBudgetModalVisible] = useState(false);
-  const [tempBudgetInput, setTempBudgetInput] = useState(monthlyBudget.toString());
-  const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
-
-  const handleEditBudget = () => {
-    setTempBudgetInput(monthlyBudget.toString());
-    setIsBudgetModalVisible(true);
-  };
-
-  const handleSaveBudget = () => {
-    const num = parseInt(tempBudgetInput.replace(/[^0-9]/g, ''), 10);
-    if (!isNaN(num)) {
-      setMonthlyBudget(num);
-    }
-    setIsBudgetModalVisible(false);
-  };
+  // State untuk modal pencarian dan pengaturan
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -100,98 +81,55 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* 1. Header Bar: Sapaan Waktu Dinamis + Tanggal + Bell Alarm */}
+        {/* 1. Header Bar: Sapaan Waktu Dinamis + Tanggal + [ 🔍 Cari ] & [ ⚙️ Pengaturan ] */}
         <DashboardHeader
-          onOpenAlarm={() => setIsAlarmModalOpen(true)}
-          hasUnrecordedToday={expensesToday.length === 0}
+          onOpenSearch={() => setIsSearchModalOpen(true)}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
         />
 
-        {/* 2. Hero Card Saldo: Midnight Indigo Theme + Toggle Mata + Metric Chips */}
+        {/* 2. Hero Card Saldo: Midnight Indigo Theme + Toggle Mata + Badge Bulan Dinamis */}
         <HeroBalanceCard
           totalExpenseThisMonth={totalExpenseThisMonth}
           totalIncomeThisMonth={totalIncomeThisMonth}
           totalSavingThisMonth={totalSavingThisMonth}
-          onQuickAdd={(type) => openInputModal(type)}
-          onOpenAlarm={() => setIsAlarmModalOpen(true)}
         />
 
         {/* 3. Smart Alarm Widget: Status Dinamis Aktif vs Selesai */}
         <SmartAlarmCard
           alarmTime={alarmTime}
           hasTransactionsToday={expensesToday.length > 0}
-          onOpenSettings={() => setIsAlarmModalOpen(true)}
+          onPress={() => setIsSettingsModalOpen(true)}
         />
 
         {/* 4. Batas Pengeluaran Harian */}
         <BudgetWarningCard
           monthlyBudget={monthlyBudget}
           totalExpenseToday={totalExpenseToday}
-          onEditBudget={handleEditBudget}
+          onEditBudget={() => setIsSettingsModalOpen(true)}
         />
 
-        {/* 5. Kategori Pilihan Cepat */}
-        <CategoryQuickChips
-          onSelectCategory={(catId) => openInputModal('expense', catId)}
-          onViewAll={() => openInputModal('expense')}
-        />
-
-        {/* 6. Transaksi Hari Ini */}
+        {/* 5. Transaksi Hari Ini: Dibatasi Maksimal 3 Transaksi */}
         <ExpenseHistoryList
           expenses={expensesToday}
           categories={categories}
           onDeleteExpense={deleteExpense}
+          onViewAll={() => router.push('/(tabs)/report')}
         />
       </ScrollView>
 
-      {/* Modal Pengatur Jam Alarm */}
-      <AlarmPickerModal
-        visible={isAlarmModalOpen}
-        currentAlarmTime={alarmTime}
-        onClose={() => setIsAlarmModalOpen(false)}
-        onSave={(newTime) => setAlarmTime(newTime)}
+      {/* Modal Pencarian Cepat */}
+      <QuickSearchModal
+        visible={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        expenses={expenses}
+        categories={categories}
       />
 
-      {/* Modal Edit Budget Bulanan (Neo Fintech Light Theme) */}
-      <Modal visible={isBudgetModalVisible} transparent animationType="fade">
-        <View className="flex-1 bg-slate-900/60 justify-center items-center px-6">
-          <View className="bg-white border border-slate-200 w-full p-6 rounded-3xl shadow-2xl">
-            <Text className="text-slate-900 text-lg font-extrabold mb-1">
-              Batas Budget Bulanan
-            </Text>
-            <Text className="text-slate-500 text-xs mb-5">
-              Tentukan batas maksimal pengeluaran Anda per bulan untuk membagi jatah harian.
-            </Text>
-
-            <View className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 mb-5">
-              <Text className="text-slate-400 text-[10px] font-bold uppercase mb-1">
-                Nominal Budget (Rp)
-              </Text>
-              <TextInput
-                className="text-slate-900 text-2xl font-black p-0"
-                keyboardType="numeric"
-                value={tempBudgetInput}
-                onChangeText={setTempBudgetInput}
-                autoFocus
-              />
-            </View>
-
-            <View className="flex-row justify-end gap-2.5">
-              <TouchableOpacity
-                onPress={() => setIsBudgetModalVisible(false)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200"
-              >
-                <Text className="text-slate-500 text-xs font-bold">Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleSaveBudget}
-                className="bg-indigo-600 px-5 py-2.5 rounded-xl shadow-sm shadow-indigo-300"
-              >
-                <Text className="text-white text-xs font-bold">Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* Modal Pengaturan Terpusat */}
+      <SettingsModal
+        visible={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
     </View>
   );
 }

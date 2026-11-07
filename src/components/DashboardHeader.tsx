@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Bell, Wallet } from 'lucide-react-native';
+import { Wallet, Search, Settings } from 'lucide-react-native';
 
 type Props = {
-  onOpenAlarm: () => void;
-  hasUnrecordedToday?: boolean;
+  onOpenSearch: () => void;
+  onOpenSettings: () => void;
 };
 
-export default function DashboardHeader({ onOpenAlarm, hasUnrecordedToday = true }: Props) {
+export default function DashboardHeader({ onOpenSearch, onOpenSettings }: Props) {
   // Sapaan waktu dinamis tanpa emotikon
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -41,16 +41,23 @@ export default function DashboardHeader({ onOpenAlarm, hasUnrecordedToday = true
         </View>
       </View>
 
-      <TouchableOpacity
-        onPress={onOpenAlarm}
-        activeOpacity={0.7}
-        className="w-11 h-11 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm relative"
-      >
-        <Bell size={20} color="#334155" />
-        {hasUnrecordedToday && (
-          <View className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white" />
-        )}
-      </TouchableOpacity>
+      <View className="flex-row items-center gap-2">
+        <TouchableOpacity
+          onPress={onOpenSearch}
+          activeOpacity={0.7}
+          className="w-10 h-10 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm"
+        >
+          <Search size={18} color="#475569" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onOpenSettings}
+          activeOpacity={0.7}
+          className="w-10 h-10 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm"
+        >
+          <Settings size={18} color="#475569" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
