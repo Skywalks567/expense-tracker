@@ -77,6 +77,8 @@ export default function HomeScreen() {
         <BudgetWarningCard
           monthlyBudget={monthlyBudget}
           totalExpenseToday={totalExpenseToday}
+          totalExpenseThisMonth={totalExpenseThisMonth}
+          totalSavingThisMonth={totalSavingThisMonth}
         />
 
         <ExpenseHistoryList

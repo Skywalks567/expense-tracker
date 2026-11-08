@@ -20,7 +20,7 @@ export default function HeroBalanceCard({
 }: Props) {
   const { isBalanceHidden, toggleBalanceHidden } = useExpenseStore();
 
-  const netBalance = totalIncomeThisMonth - totalExpenseThisMonth;
+  const netBalance = totalIncomeThisMonth - totalExpenseThisMonth - totalSavingThisMonth;
   const currentMonthYear = new Date().toLocaleDateString('id-ID', {
     month: 'long',
     year: 'numeric',

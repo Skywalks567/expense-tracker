@@ -5,23 +5,35 @@ import { Target } from 'lucide-react-native';
 type Props = {
   monthlyBudget: number;
   totalExpenseToday: number;
+  totalExpenseThisMonth: number;
+  totalSavingThisMonth: number;
 };
 
 export default function BudgetWarningCard({
   monthlyBudget,
   totalExpenseToday,
+  totalExpenseThisMonth,
+  totalSavingThisMonth,
 }: Props) {
-  // Hitung jumlah hari di bulan ini
+  // Hitung jumlah hari & sisa hari di bulan ini (termasuk hari ini)
   const date = new Date();
   const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const currentDay = date.getDate();
+  const remainingDays = Math.max(1, daysInMonth - currentDay + 1);
 
-  // Hitung jatah harian
-  const dailyBudget = Math.floor(monthlyBudget / daysInMonth);
+  // Pengeluaran bulan ini sebelum hari ini
+  const pastExpenseThisMonth = Math.max(0, totalExpenseThisMonth - totalExpenseToday);
+
+  // Sisa dana yang aman dibelanjakan (dikurangi pengeluaran lalu & alokasi tabungan)
+  const remainingPool = Math.max(0, monthlyBudget - pastExpenseThisMonth - totalSavingThisMonth);
+
+  // Jatah belanja hari ini (Dynamic Rolling Daily Budget)
+  const dailyBudget = monthlyBudget > 0 ? Math.floor(remainingPool / remainingDays) : 0;
 
   // Kalkulasi sisa & persentase
   const remaining = dailyBudget - totalExpenseToday;
-  const percentage = Math.min((totalExpenseToday / (dailyBudget || 1)) * 100, 100);
-  const isOverBudget = totalExpenseToday > dailyBudget;
+  const percentage = dailyBudget > 0 ? Math.min((totalExpenseToday / dailyBudget) * 100, 100) : (totalExpenseToday > 0 ? 100 : 0);
+  const isOverBudget = dailyBudget > 0 ? totalExpenseToday > dailyBudget : totalExpenseToday > 0;
   const isNearBudget = percentage >= 80 && !isOverBudget;
 
   let barBg = 'bg-indigo-600';
@@ -54,7 +66,7 @@ export default function BudgetWarningCard({
 
         <View className={`px-2 py-0.5 rounded-md ${badgeBg}`}>
           <Text className={`text-[10px] font-extrabold ${badgeText}`}>
-            {remainingText}
+            {monthlyBudget > 0 ? remainingText : 'Budget Belum Diatur'}
           </Text>
         </View>
       </View>
@@ -80,6 +92,9 @@ export default function BudgetWarningCard({
           <Text className="text-slate-800 font-bold">
             Rp {dailyBudget.toLocaleString('id-ID')}
           </Text>
+          {monthlyBudget > 0 && (
+            <Text className="text-[9px] text-slate-400"> ({remainingDays} hari lagi)</Text>
+          )}
         </Text>
       </View>
     </View>
