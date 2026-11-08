@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Target, Zap, SlidersHorizontal } from 'lucide-react-native';
+import { Target, Zap, SlidersHorizontal, AlertTriangle } from 'lucide-react-native';
 
 type Props = {
   budgetMode: 'auto' | 'manual';
@@ -12,12 +12,8 @@ type Props = {
 };
 
 export default function BudgetWarningCard({
-  budgetMode,
-  monthlyBudget,
-  totalIncomeThisMonth,
-  totalExpenseToday,
-  totalExpenseThisMonth,
-  totalSavingThisMonth,
+  budgetMode, monthlyBudget, totalIncomeThisMonth,
+  totalExpenseToday, totalExpenseThisMonth, totalSavingThisMonth,
 }: Props) {
   const isAuto = budgetMode === 'auto';
   const date = new Date();
@@ -25,19 +21,21 @@ export default function BudgetWarningCard({
   const currentDay = date.getDate();
   const remainingDays = Math.max(1, daysInMonth - currentDay + 1);
 
-  // Pengeluaran bulan ini sebelum hari ini
-  const pastExpenseThisMonth = Math.max(0, totalExpenseThisMonth - totalExpenseToday);
+  // Sisa saldo kas riil bulan ini (sama persis seperti di HeroBalanceCard)
+  const sisaSaldo = totalIncomeThisMonth - totalExpenseThisMonth - totalSavingThisMonth;
+  const hasIncome = totalIncomeThisMonth > 0;
 
-  // Pool dana tersedia berdasarkan mode
-  const remainingPool = isAuto
-    ? Math.max(0, totalIncomeThisMonth - pastExpenseThisMonth - totalSavingThisMonth)
-    : Math.max(0, monthlyBudget - pastExpenseThisMonth - totalSavingThisMonth);
+  // Guardrail Manual: jika saldo kas riil < budget manual, batasi dengan sisa saldo
+  const isCashCapped = !isAuto && hasIncome && sisaSaldo < monthlyBudget;
 
-  // Jatah belanja hari ini (Dynamic Rolling Daily Budget)
-  const isBudgetValid = isAuto ? totalIncomeThisMonth > 0 : monthlyBudget > 0;
-  const dailyBudget = isBudgetValid ? Math.floor(remainingPool / remainingDays) : 0;
+  // Kas riil sebelum hari ini untuk mode auto
+  const pastExpense = Math.max(0, totalExpenseThisMonth - totalExpenseToday);
+  const autoCashPool = Math.max(0, totalIncomeThisMonth - pastExpense - totalSavingThisMonth);
 
-  // Kalkulasi sisa & persentase
+  const pool = isAuto ? autoCashPool : (isCashCapped ? Math.max(0, sisaSaldo) : monthlyBudget);
+  const isBudgetValid = isAuto ? hasIncome : monthlyBudget > 0;
+  const dailyBudget = isBudgetValid ? Math.floor(pool / remainingDays) : 0;
+
   const remaining = dailyBudget - totalExpenseToday;
   const percentage = dailyBudget > 0 ? Math.min((totalExpenseToday / dailyBudget) * 100, 100) : (totalExpenseToday > 0 ? 100 : 0);
   const isOverBudget = dailyBudget > 0 ? totalExpenseToday > dailyBudget : totalExpenseToday > 0;
@@ -84,21 +82,30 @@ export default function BudgetWarningCard({
         </View>
       </View>
 
-      {/* Progress Bar Container */}
       <View className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-2 border border-slate-200">
         <View className={`h-full rounded-full ${barBg}`} style={{ width: `${percentage}%` }} />
       </View>
 
-      {/* Footer Info */}
-      <View className="flex-row justify-between items-center text-[10px]">
+      <View className="flex-row justify-between items-center">
         <Text className="text-[10px] text-slate-500 font-medium">
           Terpakai: <Text className="text-slate-800 font-bold">Rp {totalExpenseToday.toLocaleString('id-ID')}</Text>
         </Text>
         <Text className="text-[10px] text-slate-500 font-medium">
           Jatah Hari Ini: <Text className="text-slate-800 font-bold">Rp {dailyBudget.toLocaleString('id-ID')}</Text>
-          {isBudgetValid && <Text className="text-[9px] text-slate-400"> ({remainingDays} hari lagi)</Text>}
+          {isBudgetValid && (
+            <Text className="text-[9px] text-slate-400"> ({remainingDays} hari lagi)</Text>
+          )}
         </Text>
       </View>
+
+      {isCashCapped && (
+        <View className="mt-2 pt-1.5 border-t border-amber-100 flex-row items-center gap-1">
+          <AlertTriangle size={11} color="#D97706" />
+          <Text className="text-[9px] text-amber-700 font-medium flex-1">
+            Dibatasi karena sisa saldo lebih kecil dari budget
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
