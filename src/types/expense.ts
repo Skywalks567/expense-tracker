@@ -24,6 +24,7 @@ export type ExpenseState = {
   isLoading: boolean;
   userId: string | null;
   monthlyBudget: number;
+  budgetMode: 'auto' | 'manual';
   alarmTime: string;
   isBalanceHidden: boolean;
   isInputModalOpen: boolean;
@@ -38,6 +39,7 @@ export type ExpenseState = {
   ) => Promise<void>;
   deleteExpense: (expenseId: string) => Promise<void>;
   setMonthlyBudget: (amount: number) => Promise<void>;
+  setBudgetMode: (mode: 'auto' | 'manual') => Promise<void>;
   setAlarmTime: (time: string) => void;
   toggleBalanceHidden: () => void;
   openInputModal: (type?: TransactionType, categoryId?: string | null) => void;

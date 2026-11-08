@@ -19,6 +19,7 @@ export default function HomeScreen() {
     categories,
     isLoading,
     monthlyBudget,
+    budgetMode,
     deleteExpense,
     alarmTime,
     setAlarmTime,
@@ -75,7 +76,9 @@ export default function HomeScreen() {
         />
 
         <BudgetWarningCard
+          budgetMode={budgetMode}
           monthlyBudget={monthlyBudget}
+          totalIncomeThisMonth={totalIncomeThisMonth}
           totalExpenseToday={totalExpenseToday}
           totalExpenseThisMonth={totalExpenseThisMonth}
           totalSavingThisMonth={totalSavingThisMonth}

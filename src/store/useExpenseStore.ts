@@ -20,6 +20,7 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   isLoading: true,
   userId: null,
   monthlyBudget: 3000000,
+  budgetMode: 'auto',
   alarmTime: '20:00',
   isBalanceHidden: false,
   isInputModalOpen: false,
@@ -31,6 +32,10 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
     await dbSetSetting('alarmTime', time);
     await scheduleDailyAlarm(time);
   },
+  setBudgetMode: async (mode) => {
+    set({ budgetMode: mode });
+    await dbSetSetting('budgetMode', mode);
+  },
   toggleBalanceHidden: () => set((state) => ({ isBalanceHidden: !state.isBalanceHidden })),
   openInputModal: (type = 'expense', categoryId = null) =>
     set({ isInputModalOpen: true, inputInitialType: type, inputInitialCategoryId: categoryId }),
@@ -40,11 +45,13 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
     try {
       const storedExpenses = await dbGetExpenses();
       const storedBudgetStr = await dbGetSetting('monthlyBudget', '3000000');
+      const storedMode = (await dbGetSetting('budgetMode', 'auto')) as 'auto' | 'manual';
       const storedAlarm = await dbGetSetting('alarmTime', '20:00');
 
       set({
         expenses: storedExpenses,
         monthlyBudget: parseInt(storedBudgetStr, 10) || 3000000,
+        budgetMode: storedMode === 'manual' ? 'manual' : 'auto',
         alarmTime: storedAlarm,
         isLoading: false,
       });

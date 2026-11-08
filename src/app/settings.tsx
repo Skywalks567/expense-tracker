@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Trash2, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react-native';
 import { useExpenseStore, Expense } from '../store/useExpenseStore';
 import { exportBackupToFile, importBackupFromFile } from '../services/backupService';
 import BudgetSection from '../components/settings/BudgetSection';
 import BackupRestoreSection from '../components/settings/BackupRestoreSection';
+import DangerZoneSection from '../components/settings/DangerZoneSection';
 import ResetConfirmModal from '../components/settings/ResetConfirmModal';
 import ImportConfirmModal from '../components/settings/ImportConfirmModal';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { monthlyBudget, setMonthlyBudget, expenses, resetAllData, importExpenses } = useExpenseStore();
+  const { monthlyBudget, setMonthlyBudget, budgetMode, setBudgetMode, expenses, resetAllData, importExpenses } =
+    useExpenseStore();
 
   const [tempBudget, setTempBudget] = useState(monthlyBudget.toString());
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -79,17 +81,18 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        <BudgetSection budgetInput={tempBudget} onChangeBudget={setTempBudget} onSave={handleSaveBudget} />
+        <BudgetSection
+          budgetMode={budgetMode}
+          onChangeMode={async (m) => {
+            await setBudgetMode(m);
+            showSuccess(m === 'auto' ? 'Mode Otomatis diaktifkan' : 'Mode Manual diaktifkan');
+          }}
+          budgetInput={tempBudget}
+          onChangeBudget={setTempBudget}
+          onSave={handleSaveBudget}
+        />
         <BackupRestoreSection totalRecords={expenses.length} onExport={handleExportFile} onImport={handleImportFile} />
-
-        <View className="bg-white border border-slate-200/90 rounded-3xl p-5 mb-6 shadow-sm">
-          <Text className="text-rose-600 font-extrabold text-xs uppercase tracking-wider mb-1.5">Zona Bahaya</Text>
-          <Text className="text-slate-400 text-xs mb-4">Menghapus permanen seluruh riwayat transaksi.</Text>
-          <TouchableOpacity onPress={() => setIsResetOpen(true)} className="bg-rose-50 border border-rose-200 py-3.5 px-4 rounded-2xl flex-row items-center justify-center gap-2">
-            <Trash2 size={16} color="#E11D48" />
-            <Text className="text-rose-600 text-xs font-bold">Hapus Seluruh Data Catatan</Text>
-          </TouchableOpacity>
-        </View>
+        <DangerZoneSection onPressReset={() => setIsResetOpen(true)} />
 
         <View className="items-center pb-8"><Text className="text-slate-400 text-xs font-semibold">Versi 1.0.0</Text></View>
       </ScrollView>
