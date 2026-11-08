@@ -1,88 +1,85 @@
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Expense, Category } from '../store/useExpenseStore';
-import { ReceiptText } from 'lucide-react-native';
+import { ReceiptText, ArrowRight } from 'lucide-react-native';
+import { Expense, Category } from '../types/expense';
+import DeleteConfirmModal from './history/DeleteConfirmModal';
+import TransactionHistoryItem from './history/TransactionHistoryItem';
 
 type Props = {
   expenses: Expense[];
   categories: Category[];
   onDeleteExpense: (id: string) => void;
+  onViewAll?: () => void;
 };
 
-export default function ExpenseHistoryList({ expenses, categories, onDeleteExpense }: Props) {
+export default function ExpenseHistoryList({
+  expenses,
+  categories,
+  onDeleteExpense,
+  onViewAll,
+}: Props) {
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (deleteTargetId) {
+      onDeleteExpense(deleteTargetId);
+      setDeleteTargetId(null);
+    }
+  };
+
+  const displayedExpenses = expenses.slice(0, 3);
+  const hasMore = expenses.length > 3;
+
   return (
-    <View className="mt-6 mb-6">
-      <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-xl font-bold text-white">Transaksi Hari Ini</Text>
-        <Text className="text-zinc-500 text-xs font-semibold">{expenses.length} transaksi</Text>
+    <View className="mb-6">
+      <View className="flex-row justify-between items-center mb-3">
+        <Text className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
+          Transaksi Hari Ini
+        </Text>
+        <Text className="text-[10px] text-slate-400 font-bold">{expenses.length} Transaksi</Text>
       </View>
-      
+
       {expenses.length === 0 ? (
-        <View className="bg-zinc-900/60 border border-zinc-800/80 p-8 rounded-3xl items-center justify-center">
-          <View className="w-12 h-12 rounded-2xl bg-zinc-800 items-center justify-center mb-3">
-            <ReceiptText size={24} color="#71717A" />
+        <View className="bg-white border border-slate-200/90 p-8 rounded-3xl items-center justify-center shadow-sm">
+          <View className="w-12 h-12 rounded-2xl bg-slate-100 items-center justify-center mb-3">
+            <ReceiptText size={22} color="#94A3B8" />
           </View>
-          <Text className="text-zinc-300 font-semibold text-sm mb-1">Belum ada transaksi hari ini</Text>
-          <Text className="text-zinc-500 text-xs text-center">
-            Tekan tombol (+) di bawah untuk mencatat pengeluaran, pemasukan, atau tabunganmu.
+          <Text className="text-slate-800 font-bold text-sm mb-1">Belum ada transaksi hari ini</Text>
+          <Text className="text-slate-400 text-xs text-center leading-relaxed">
+            Tekan tombol (+) di bawah untuk mulai mencatat pengeluaran, pemasukan, atau tabungan.
           </Text>
         </View>
       ) : (
-        expenses.map((item) => {
-          const category = categories.find(c => c.id === item.categoryId);
-          
-          // Format tanda (+) atau (-) dan warna berdasarkan tipe
-          const isIncome = item.type === 'income';
-          const isSaving = item.type === 'saving';
-          
-          let sign = '-';
-          let amountColor = 'text-rose-400';
-          
-          if (isIncome) {
-            sign = '+';
-            amountColor = 'text-emerald-400';
-          } else if (isSaving) {
-            sign = '';
-            amountColor = 'text-blue-400';
-          }
+        <>
+          {displayedExpenses.map((item) => (
+            <TransactionHistoryItem
+              key={item.id}
+              item={item}
+              category={categories.find((c) => c.id === item.categoryId)}
+              onPressDelete={setDeleteTargetId}
+            />
+          ))}
 
-          return (
-            <View 
-              key={item.id} 
-              className="flex-row justify-between items-center bg-zinc-900 border border-zinc-800 p-4 rounded-2xl mb-2.5"
+          {hasMore && onViewAll && (
+            <TouchableOpacity
+              onPress={onViewAll}
+              activeOpacity={0.7}
+              className="bg-white border border-slate-200/90 py-3 px-4 rounded-2xl flex-row items-center justify-center gap-2 mt-1 shadow-sm"
             >
-              <View className="flex-row items-center flex-1 pr-2">
-                <View 
-                  className="w-12 h-12 rounded-2xl items-center justify-center mr-3"
-                  style={{ backgroundColor: (category?.color || '#3B82F6') + '25' }}
-                >
-                  <Text className="text-2xl">{category?.icon || '💳'}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-white font-bold text-base" numberOfLines={1}>
-                    {category?.name || 'Lain-lain'}
-                  </Text>
-                  {item.note ? (
-                    <Text className="text-zinc-400 text-xs mt-0.5" numberOfLines={1}>
-                      {item.note}
-                    </Text>
-                  ) : null}
-                </View>
-              </View>
-              <View className="items-end">
-                <Text className={`${amountColor} font-bold text-base`}>
-                  {sign} Rp {item.amount.toLocaleString('id-ID')}
-                </Text>
-                <TouchableOpacity 
-                  onPress={() => onDeleteExpense(item.id)} 
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Text className="text-zinc-500 text-xs mt-1 underline">Hapus</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        })
+              <Text className="text-xs font-bold text-indigo-600">
+                Lihat Semua Transaksi Hari Ini ({expenses.length})
+              </Text>
+              <ArrowRight size={14} color="#4F46E5" />
+            </TouchableOpacity>
+          )}
+        </>
       )}
+
+      <DeleteConfirmModal
+        visible={!!deleteTargetId}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </View>
   );
 }

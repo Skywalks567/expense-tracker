@@ -1,76 +1,62 @@
+import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Settings, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react-native';
+import { Wallet, Search, Settings } from 'lucide-react-native';
 
 type Props = {
-  totalExpenseThisMonth: number;
-  totalIncomeThisMonth?: number;
-  totalSavingThisMonth?: number;
-  onEditBudget: () => void;
+  onOpenSearch: () => void;
+  onOpenSettings: () => void;
 };
 
-export default function DashboardHeader({ 
-  totalExpenseThisMonth, 
-  totalIncomeThisMonth = 0, 
-  totalSavingThisMonth = 0, 
-  onEditBudget 
-}: Props) {
-  const netBalance = totalIncomeThisMonth - totalExpenseThisMonth;
+export default function DashboardHeader({ onOpenSearch, onOpenSettings }: Props) {
+  // Sapaan waktu dinamis tanpa emotikon
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 11) return 'Selamat Pagi';
+    if (hour >= 11 && hour < 15) return 'Selamat Siang';
+    if (hour >= 15 && hour < 18.5) return 'Selamat Sore';
+    return 'Selamat Malam';
+  };
+
+  // Tanggal hari ini dalam format Bahasa Indonesia
+  const todayFormatted = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
-    <View className="mb-6">
-      {/* Baris Atas: Sisa Saldo / Cashflow & Pengaturan */}
-      <View className="flex-row justify-between items-start mb-4">
+    <View className="flex-row justify-between items-center mb-5 pt-2">
+      <View className="flex-row items-center gap-3">
+        <View className="w-11 h-11 rounded-2xl bg-indigo-600 items-center justify-center shadow-md shadow-indigo-300">
+          <Wallet size={20} color="#FFFFFF" />
+        </View>
         <View>
-          <Text className="text-zinc-400 text-xs uppercase tracking-wider mb-1 font-semibold">
-            Sisa Saldo Bulan Ini
+          <Text className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            {todayFormatted}
           </Text>
-          <Text className={`text-3xl font-extrabold ${netBalance >= 0 ? 'text-white' : 'text-rose-400'}`}>
-            Rp {netBalance.toLocaleString('id-ID')}
+          <Text className="text-lg font-extrabold text-slate-900 leading-tight">
+            {getGreeting()}
           </Text>
         </View>
-        <TouchableOpacity 
-          onPress={onEditBudget}
-          className="bg-zinc-800/90 p-3 rounded-2xl border border-zinc-700/50"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Settings color="#9CA3AF" size={20} />
-        </TouchableOpacity>
       </View>
 
-      {/* Baris Bawah: 3 Kartu Mini Ringkasan (Pemasukan, Pengeluaran, Tabungan) */}
-      <View className="flex-row gap-2">
-        {/* Pemasukan */}
-        <View className="flex-1 bg-emerald-950/40 border border-emerald-500/20 p-2.5 rounded-2xl">
-          <View className="flex-row items-center mb-1">
-            <TrendingUp size={14} color="#34D399" />
-            <Text className="text-emerald-400 text-[11px] font-bold ml-1">Masuk</Text>
-          </View>
-          <Text className="text-emerald-300 font-bold text-xs" numberOfLines={1}>
-            +Rp {totalIncomeThisMonth.toLocaleString('id-ID')}
-          </Text>
-        </View>
+      <View className="flex-row items-center gap-2">
+        <TouchableOpacity
+          onPress={onOpenSearch}
+          activeOpacity={0.7}
+          className="w-10 h-10 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm"
+        >
+          <Search size={18} color="#475569" />
+        </TouchableOpacity>
 
-        {/* Pengeluaran */}
-        <View className="flex-1 bg-rose-950/40 border border-rose-500/20 p-2.5 rounded-2xl">
-          <View className="flex-row items-center mb-1">
-            <TrendingDown size={14} color="#FB7185" />
-            <Text className="text-rose-400 text-[11px] font-bold ml-1">Keluar</Text>
-          </View>
-          <Text className="text-rose-300 font-bold text-xs" numberOfLines={1}>
-            -Rp {totalExpenseThisMonth.toLocaleString('id-ID')}
-          </Text>
-        </View>
-
-        {/* Tabungan */}
-        <View className="flex-1 bg-blue-950/40 border border-blue-500/20 p-2.5 rounded-2xl">
-          <View className="flex-row items-center mb-1">
-            <PiggyBank size={14} color="#60A5FA" />
-            <Text className="text-blue-400 text-[11px] font-bold ml-1">Ditabung</Text>
-          </View>
-          <Text className="text-blue-300 font-bold text-xs" numberOfLines={1}>
-            Rp {totalSavingThisMonth.toLocaleString('id-ID')}
-          </Text>
-        </View>
+        <TouchableOpacity
+          onPress={onOpenSettings}
+          activeOpacity={0.7}
+          className="w-10 h-10 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm"
+        >
+          <Settings size={18} color="#475569" />
+        </TouchableOpacity>
       </View>
     </View>
   );

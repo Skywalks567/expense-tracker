@@ -9,9 +9,10 @@ export default function Layout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
         </Stack>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
