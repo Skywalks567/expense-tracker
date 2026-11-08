@@ -21,18 +21,15 @@ export default function BudgetWarningCard({
   const currentDay = date.getDate();
   const remainingDays = Math.max(1, daysInMonth - currentDay + 1);
 
-  // Sisa saldo kas riil bulan ini (sama persis seperti di HeroBalanceCard)
-  const sisaSaldo = totalIncomeThisMonth - totalExpenseThisMonth - totalSavingThisMonth;
+  // Kas riil awal hari ini (sebelum belanjaan hari ini)
+  const pastExpense = Math.max(0, totalExpenseThisMonth - totalExpenseToday);
+  const realCashPool = Math.max(0, totalIncomeThisMonth - pastExpense - totalSavingThisMonth);
   const hasIncome = totalIncomeThisMonth > 0;
 
-  // Guardrail Manual: jika saldo kas riil < budget manual, batasi dengan sisa saldo
-  const isCashCapped = !isAuto && hasIncome && sisaSaldo < monthlyBudget;
+  // Guardrail Manual: jika kas riil awal hari < budget manual, batasi dengan kas riil
+  const isCashCapped = !isAuto && hasIncome && realCashPool < monthlyBudget;
 
-  // Kas riil sebelum hari ini untuk mode auto
-  const pastExpense = Math.max(0, totalExpenseThisMonth - totalExpenseToday);
-  const autoCashPool = Math.max(0, totalIncomeThisMonth - pastExpense - totalSavingThisMonth);
-
-  const pool = isAuto ? autoCashPool : (isCashCapped ? Math.max(0, sisaSaldo) : monthlyBudget);
+  const pool = isAuto ? realCashPool : (isCashCapped ? realCashPool : monthlyBudget);
   const isBudgetValid = isAuto ? hasIncome : monthlyBudget > 0;
   const dailyBudget = isBudgetValid ? Math.floor(pool / remainingDays) : 0;
 
