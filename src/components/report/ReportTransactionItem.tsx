@@ -33,7 +33,7 @@ export default function ReportTransactionItem({
     : '';
 
   return (
-    <View className="flex-row justify-between items-center bg-white p-4 rounded-2xl mb-2.5 border border-slate-200/80 shadow-sm">
+    <View className="flex-row justify-between items-center bg-white p-4 rounded-2xl mb-2.5 border border-slate-200/80">
       <View className="flex-row items-center flex-1 pr-3">
         <View
           className="w-10 h-10 rounded-xl items-center justify-center mr-3 border border-slate-100"

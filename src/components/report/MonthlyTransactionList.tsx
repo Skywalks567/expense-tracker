@@ -43,7 +43,7 @@ export default function MonthlyTransactionList({
       <ReportFilterPills filterType={filterType} onFilterChange={onFilterChange} />
 
       {transactions.length === 0 ? (
-        <View className="bg-white p-8 rounded-3xl items-center justify-center border border-slate-200/90 shadow-sm">
+        <View className="bg-white p-8 rounded-3xl items-center justify-center border border-slate-200/90" style={{ elevation: 1 }}>
           <Text className="text-slate-400 text-xs font-bold">
             Tidak ada transaksi pada filter ini.
           </Text>
