@@ -27,13 +27,19 @@ export default function ReportTransactionItem({
     amountColor = 'text-sky-600';
   }
 
-  const itemDate = new Date(item.date);
-  const formattedDate = !isNaN(itemDate.getTime())
-    ? `${itemDate.getDate()} ${itemDate.toLocaleDateString('id-ID', { month: 'short' })}`
-    : '';
+  const formatTime = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes} WIB`;
+    } catch {
+      return '';
+    }
+  };
 
   return (
-    <View className="flex-row justify-between items-center bg-white p-4 rounded-2xl mb-2.5 border border-slate-200/80">
+    <View className="flex-row justify-between items-center bg-white p-3.5 rounded-2xl mb-2 border border-slate-200/80">
       <View className="flex-row items-center flex-1 pr-3">
         <View
           className="w-10 h-10 rounded-xl items-center justify-center mr-3 border border-slate-100"
@@ -45,8 +51,8 @@ export default function ReportTransactionItem({
           <Text className="text-slate-800 font-bold text-xs" numberOfLines={1}>
             {category?.name || 'Lain-lain'}
           </Text>
-          <Text className="text-slate-400 text-[11px] mt-0.5">
-            {formattedDate} {item.note ? `• ${item.note}` : ''}
+          <Text className="text-slate-400 text-[10px] font-medium mt-0.5">
+            {formatTime(item.date)} {item.note ? `• ${item.note}` : ''}
           </Text>
         </View>
       </View>
@@ -55,10 +61,9 @@ export default function ReportTransactionItem({
           {sign} Rp {item.amount.toLocaleString('id-ID')}
         </Text>
         <TouchableOpacity onPress={() => onPressDelete(item.id)} className="p-1">
-          <Trash2 size={15} color="#94A3B8" />
+          <Trash2 size={14} color="#94A3B8" />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
