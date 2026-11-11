@@ -25,6 +25,8 @@ export default function ReportTransactionItem({
   } else if (isSaving) {
     sign = '';
     amountColor = 'text-sky-600';
+  } else if (item.source === 'saving') {
+    amountColor = item.isSavingLoan ? 'text-amber-600' : 'text-sky-700';
   }
 
   const formatTime = (isoString: string) => {
@@ -38,6 +40,9 @@ export default function ReportTransactionItem({
     }
   };
 
+  const isLoan = item.type === 'expense' && item.source === 'saving' && item.isSavingLoan;
+  const isSavingSpent = item.type === 'expense' && item.source === 'saving' && !item.isSavingLoan;
+
   return (
     <View className="flex-row justify-between items-center bg-white p-3.5 rounded-2xl mb-2 border border-slate-200/80">
       <View className="flex-row items-center flex-1 pr-3">
@@ -48,9 +53,21 @@ export default function ReportTransactionItem({
           <Text className="text-xl">{category?.icon || '💳'}</Text>
         </View>
         <View className="flex-1">
-          <Text className="text-slate-800 font-bold text-xs" numberOfLines={1}>
-            {category?.name || 'Lain-lain'}
-          </Text>
+          <View className="flex-row items-center gap-1.5 flex-wrap">
+            <Text className="text-slate-800 font-bold text-xs" numberOfLines={1}>
+              {category?.name || 'Lain-lain'}
+            </Text>
+            {isLoan && (
+              <View className="bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-md">
+                <Text className="text-[8px] font-extrabold text-amber-800">Pinjam Tabungan</Text>
+              </View>
+            )}
+            {isSavingSpent && (
+              <View className="bg-sky-100 border border-sky-300 px-1.5 py-0.5 rounded-md">
+                <Text className="text-[8px] font-extrabold text-sky-800">Tabungan</Text>
+              </View>
+            )}
+          </View>
           <Text className="text-slate-400 text-[10px] font-medium mt-0.5">
             {formatTime(item.date)} {item.note ? `• ${item.note}` : ''}
           </Text>

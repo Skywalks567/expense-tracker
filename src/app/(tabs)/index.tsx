@@ -34,7 +34,9 @@ export default function HomeScreen() {
     totalExpenseToday,
     totalExpenseThisMonth,
     totalIncomeThisMonth,
+    rawSavingThisMonth,
     totalSavingThisMonth,
+    totalSavingLoan,
   } = useDashboardFinancials(expenses);
 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -66,6 +68,8 @@ export default function HomeScreen() {
           totalExpenseThisMonth={totalExpenseThisMonth}
           totalIncomeThisMonth={totalIncomeThisMonth}
           totalSavingThisMonth={totalSavingThisMonth}
+          rawSavingThisMonth={rawSavingThisMonth}
+          totalSavingLoan={totalSavingLoan}
           expenses={expenses}
         />
 

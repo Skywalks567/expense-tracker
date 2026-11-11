@@ -1,4 +1,5 @@
 export type TransactionType = 'expense' | 'income' | 'saving';
+export type ExpenseSource = 'cash' | 'saving';
 
 export type Category = {
   id: string;
@@ -16,6 +17,8 @@ export type Expense = {
   date: string;
   note?: string;
   type: TransactionType;
+  source?: ExpenseSource;
+  isSavingLoan?: boolean;
 };
 
 export type ExpenseState = {
@@ -35,7 +38,9 @@ export type ExpenseState = {
     amount: number,
     categoryId: string,
     note?: string,
-    type?: TransactionType
+    type?: TransactionType,
+    source?: ExpenseSource,
+    isSavingLoan?: boolean
   ) => Promise<void>;
   deleteExpense: (expenseId: string) => Promise<void>;
   setMonthlyBudget: (amount: number) => Promise<void>;
@@ -47,4 +52,3 @@ export type ExpenseState = {
   resetAllData: () => Promise<void>;
   importExpenses: (importedExpenses: Expense[]) => Promise<void>;
 };
-

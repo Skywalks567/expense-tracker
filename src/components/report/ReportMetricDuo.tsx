@@ -5,6 +5,7 @@ import { PiggyBank, CalendarDays } from 'lucide-react-native';
 type Props = {
   savingsRate: number;
   totalSaving: number;
+  savingSpent?: number;
   dailyAverage: number;
   daysCount: number;
 };
@@ -12,6 +13,7 @@ type Props = {
 export default function ReportMetricDuo({
   savingsRate,
   totalSaving,
+  savingSpent = 0,
   dailyAverage,
   daysCount,
 }: Props) {
@@ -40,6 +42,11 @@ export default function ReportMetricDuo({
           <Text className="text-[9px] text-sky-700/80 font-medium mt-1">
             Ditabung: Rp {totalSaving.toLocaleString('id-ID')}
           </Text>
+          {savingSpent > 0 && (
+            <Text className="text-[9px] text-amber-700 font-bold mt-0.5">
+              Terpakai: Rp {savingSpent.toLocaleString('id-ID')}
+            </Text>
+          )}
         </View>
       </View>
 

@@ -63,16 +63,19 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
     }
   },
 
-  addExpense: async (amount, categoryId, note, type) => {
+  addExpense: async (amount, categoryId, note, type, source, isSavingLoan) => {
     const { categories, alarmTime, expenses } = get();
     const cat = categories.find((c) => c.id === categoryId);
+    const resolvedType = type || cat?.type || 'expense';
     const newExpense: Expense = {
       id: `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       amount,
       categoryId,
       date: new Date().toISOString(),
       note: note || '',
-      type: type || cat?.type || 'expense',
+      type: resolvedType,
+      source: resolvedType === 'expense' ? (source || 'cash') : undefined,
+      isSavingLoan: resolvedType === 'expense' && source === 'saving' ? !!isSavingLoan : undefined,
     };
 
     const updated = [newExpense, ...expenses];

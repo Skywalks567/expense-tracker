@@ -53,6 +53,7 @@ export default function ReportScreen() {
   const totalExpense = periodExpenses.filter((e) => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = periodExpenses.filter((e) => e.type === 'income').reduce((sum, e) => sum + e.amount, 0);
   const totalSaving = periodExpenses.filter((e) => e.type === 'saving').reduce((sum, e) => sum + e.amount, 0);
+  const savingSpent = periodExpenses.filter((e) => e.type === 'expense' && e.source === 'saving').reduce((sum, e) => sum + e.amount, 0);
   const savingsRate = totalIncome > 0 ? Math.round((totalSaving / totalIncome) * 100) : 0;
 
   const nowStr = new Date().toISOString().substring(0, 10);
@@ -83,7 +84,13 @@ export default function ReportScreen() {
         {activeTab === 'summary' ? (
           <View key="summary-tab-content">
             <ReportDonutHeroCard expenses={periodExpenses} categories={categories} totalExpense={totalExpense} />
-            <ReportMetricDuo savingsRate={savingsRate} totalSaving={totalSaving} dailyAverage={dailyAverage} daysCount={diffDays} />
+            <ReportMetricDuo
+              savingsRate={savingsRate}
+              totalSaving={totalSaving}
+              savingSpent={savingSpent}
+              dailyAverage={dailyAverage}
+              daysCount={diffDays}
+            />
           </View>
         ) : (
           <View key="transactions-tab-content">
