@@ -1,118 +1,113 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StatusBar } from 'react-native';
+import { View, ScrollView, StatusBar } from 'react-native';
 import { useExpenseStore, TransactionType } from '../../store/useExpenseStore';
-import ExpenseDonutChart from '../../components/ExpenseDonutChart';
-import SavingsHealthCard from '../../components/report/SavingsHealthCard';
-import CashFlowOverviewCard from '../../components/report/CashFlowOverviewCard';
-import CategoryRankingList, {
-  CategoryRankingItem,
-} from '../../components/report/CategoryRankingList';
+import ReportHeader from '../../components/report/ReportHeader';
+import ReportTabSwitch from '../../components/report/ReportTabSwitch';
+import ReportDonutHeroCard from '../../components/report/ReportDonutHeroCard';
+import ReportMetricDuo from '../../components/report/ReportMetricDuo';
 import MonthlyTransactionList from '../../components/report/MonthlyTransactionList';
+import ReportDatePickerModal from '../../components/report/ReportDatePickerModal';
+import { getMonthDateRange, formatCustomDateRange, DateRange } from '../../components/report/reportDateUtils';
 
 export default function ReportScreen() {
   const { expenses, categories, deleteExpense } = useExpenseStore();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState<DateRange>(() => getMonthDateRange(new Date()));
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'summary' | 'transactions'>('summary');
   const [filterType, setFilterType] = useState<'all' | TransactionType>('all');
 
-  // Format bulan & tahun saat ini dalam Bahasa Indonesia
-  const now = new Date();
-  const currentMonthName = now.toLocaleDateString('id-ID', {
-    month: 'long',
-    year: 'numeric',
+  const handlePrevMonth = () => {
+    const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
+    setSelectedDate(d);
+    setDateRange(getMonthDateRange(d));
+  };
+
+  const handleNextMonth = () => {
+    const now = new Date();
+    if (selectedDate.getFullYear() === now.getFullYear() && selectedDate.getMonth() >= now.getMonth()) return;
+    const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
+    setSelectedDate(d);
+    setDateRange(getMonthDateRange(d));
+  };
+
+  const handleSelectMonth = (d: Date) => {
+    setSelectedDate(d);
+    setDateRange(getMonthDateRange(d));
+  };
+
+  const handleApplyCustom = (start: string, end: string) => {
+    setDateRange({
+      startDate: start,
+      endDate: end,
+      label: formatCustomDateRange(start, end),
+      isCustom: true,
+    });
+  };
+
+  const periodExpenses = expenses.filter((e) => {
+    const d = e.date.substring(0, 10);
+    return d >= dateRange.startDate && d <= dateRange.endDate;
   });
-  const thisMonthString = now.toISOString().substring(0, 7);
 
-  // Filter transaksi bulan berjalan
-  const monthlyExpenses = expenses.filter((e) => e.date.startsWith(thisMonthString));
+  const totalExpense = periodExpenses.filter((e) => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+  const totalIncome = periodExpenses.filter((e) => e.type === 'income').reduce((sum, e) => sum + e.amount, 0);
+  const totalSaving = periodExpenses.filter((e) => e.type === 'saving').reduce((sum, e) => sum + e.amount, 0);
+  const savingSpent = periodExpenses.filter((e) => e.type === 'expense' && e.source === 'saving').reduce((sum, e) => sum + e.amount, 0);
+  const savingsRate = totalIncome > 0 ? Math.round((totalSaving / totalIncome) * 100) : 0;
 
-  // Agregasi finansial
-  const totalExpense = monthlyExpenses
-    .filter((e) => e.type === 'expense')
-    .reduce((sum, e) => sum + e.amount, 0);
+  const nowStr = new Date().toISOString().substring(0, 10);
+  const endEffective = dateRange.endDate < nowStr ? dateRange.endDate : nowStr;
+  const startD = new Date(dateRange.startDate);
+  const endD = new Date(endEffective);
+  const diffDays = Math.max(1, Math.round((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  const dailyAverage = Math.floor(totalExpense / diffDays);
 
-  const totalIncome = monthlyExpenses
-    .filter((e) => e.type === 'income')
-    .reduce((sum, e) => sum + e.amount, 0);
-
-  const totalSaving = monthlyExpenses
-    .filter((e) => e.type === 'saving')
-    .reduce((sum, e) => sum + e.amount, 0);
-
-  const savingsRate =
-    totalIncome > 0 ? Math.round((totalSaving / totalIncome) * 100) : 0;
-
-  // Filter daftar transaksi bulan ini
-  const filteredList = monthlyExpenses.filter((e) => {
-    if (filterType === 'all') return true;
-    return e.type === filterType;
-  });
-
-  // Ranking Kategori Pengeluaran Terbesar
-  const expenseRankings: CategoryRankingItem[] = categories
-    .filter((c) => c.type === 'expense')
-    .map((cat) => {
-      const total = monthlyExpenses
-        .filter((e) => e.categoryId === cat.id && e.type === 'expense')
-        .reduce((sum, e) => sum + e.amount, 0);
-      const percentage = totalExpense > 0 ? Math.round((total / totalExpense) * 100) : 0;
-      return { ...cat, total, percentage };
-    })
-    .filter((c) => c.total > 0)
-    .sort((a, b) => b.total - a.total);
+  const filteredList = periodExpenses.filter((e) => (filterType === 'all' ? true : e.type === filterType));
 
   return (
     <View className="flex-1 bg-slate-50">
       <StatusBar barStyle="dark-content" />
 
-      <ScrollView
-        className="flex-1 px-5 pt-12"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Header Laporan */}
-        <View className="mb-5 pt-2">
-          <Text className="text-slate-400 text-[11px] uppercase tracking-wider font-extrabold mb-1">
-            Laporan Finansial
-          </Text>
-          <Text className="text-slate-900 text-2xl font-black">{currentMonthName}</Text>
-        </View>
-
-        {/* 1. Evaluasi Rasio Tabungan */}
-        <SavingsHealthCard savingsRate={savingsRate} totalSaving={totalSaving} />
-
-        {/* 2. Arus Kas Bulanan */}
-        <CashFlowOverviewCard
-          totalIncome={totalIncome}
-          totalExpense={totalExpense}
-          totalSaving={totalSaving}
+      <ScrollView className="flex-1 px-5 pt-12" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <ReportHeader
+          currentDate={selectedDate}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
+          onOpenPicker={() => setIsPickerOpen(true)}
+          label={dateRange.label}
+          isCustom={dateRange.isCustom}
         />
 
-        {/* 3. Grafik Donut & Ranking Pengeluaran */}
-        <View className="bg-white border border-slate-200/90 p-5 rounded-3xl mb-5 shadow-sm">
-          <Text className="text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-1">
-            Distribusi Pengeluaran
-          </Text>
-          <Text className="text-slate-400 text-xs mb-3">
-            Persentase pengeluaran berdasarkan kategori
-          </Text>
+        <ReportTabSwitch activeTab={activeTab} onTabChange={setActiveTab} txCount={periodExpenses.length} />
 
-          <ExpenseDonutChart
-            expenses={monthlyExpenses.filter((e) => e.type === 'expense')}
-            categories={categories}
-            totalExpense={totalExpense}
-          />
-
-          <CategoryRankingList rankings={expenseRankings} />
-        </View>
-
-        {/* 4. Daftar Riwayat Transaksi Bulanan */}
-        <MonthlyTransactionList
-          transactions={filteredList}
-          categories={categories}
-          filterType={filterType}
-          onFilterChange={setFilterType}
-          onDeleteExpense={deleteExpense}
-        />
+        {activeTab === 'summary' ? (
+          <View key="summary-tab-content">
+            <ReportDonutHeroCard expenses={periodExpenses} categories={categories} totalExpense={totalExpense} />
+            <ReportMetricDuo
+              savingsRate={savingsRate}
+              totalSaving={totalSaving}
+              savingSpent={savingSpent}
+              dailyAverage={dailyAverage}
+              daysCount={diffDays}
+            />
+          </View>
+        ) : (
+          <View key="transactions-tab-content">
+            <MonthlyTransactionList transactions={filteredList} categories={categories} filterType={filterType} onFilterChange={setFilterType} onDeleteExpense={deleteExpense} />
+          </View>
+        )}
       </ScrollView>
+
+      <ReportDatePickerModal
+        visible={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        selectedDate={selectedDate}
+        onSelectMonthDate={handleSelectMonth}
+        startDate={dateRange.startDate}
+        endDate={dateRange.endDate}
+        onApplyCustomRange={handleApplyCustom}
+      />
     </View>
   );
 }

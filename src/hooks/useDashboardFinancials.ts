@@ -9,30 +9,44 @@ export function useDashboardFinancials(expenses: Expense[]) {
     const expensesToday = expenses.filter((e) => e.date.startsWith(todayString));
     const expensesThisMonth = expenses.filter((e) => e.date.startsWith(thisMonthString));
 
+    // Belanja kas hari ini (pengeluaran dari tabungan tidak mengurangi batas harian kas)
     const totalExpenseToday = expensesToday
-      .filter((e) => e.type === 'expense')
+      .filter((e) => e.type === 'expense' && e.source !== 'saving')
       .reduce((sum, e) => sum + e.amount, 0);
 
-    const totalExpenseThisMonth = expensesThisMonth
-      .filter((e) => e.type === 'expense')
+    const totalCashExpenseThisMonth = expensesThisMonth
+      .filter((e) => e.type === 'expense' && e.source !== 'saving')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const totalSavingSpentThisMonth = expensesThisMonth
+      .filter((e) => e.type === 'expense' && e.source === 'saving')
       .reduce((sum, e) => sum + e.amount, 0);
 
     const totalIncomeThisMonth = expensesThisMonth
       .filter((e) => e.type === 'income')
       .reduce((sum, e) => sum + e.amount, 0);
 
-    const totalSavingThisMonth = expensesThisMonth
+    const rawSavingThisMonth = expensesThisMonth
       .filter((e) => e.type === 'saving')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const netSavingThisMonth = Math.max(0, rawSavingThisMonth - totalSavingSpentThisMonth);
+
+    const totalSavingLoan = expenses
+      .filter((e) => e.type === 'expense' && e.source === 'saving' && e.isSavingLoan)
       .reduce((sum, e) => sum + e.amount, 0);
 
     return {
       expensesToday,
       expensesThisMonth,
       totalExpenseToday,
-      totalExpenseThisMonth,
+      totalCashExpenseThisMonth,
+      totalExpenseThisMonth: totalCashExpenseThisMonth,
+      totalSavingSpentThisMonth,
       totalIncomeThisMonth,
-      totalSavingThisMonth,
+      rawSavingThisMonth,
+      totalSavingThisMonth: netSavingThisMonth,
+      totalSavingLoan,
     };
   }, [expenses]);
 }
-

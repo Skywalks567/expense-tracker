@@ -25,15 +25,26 @@ export default function ReportTransactionItem({
   } else if (isSaving) {
     sign = '';
     amountColor = 'text-sky-600';
+  } else if (item.source === 'saving') {
+    amountColor = item.isSavingLoan ? 'text-amber-600' : 'text-sky-700';
   }
 
-  const itemDate = new Date(item.date);
-  const formattedDate = !isNaN(itemDate.getTime())
-    ? `${itemDate.getDate()} ${itemDate.toLocaleDateString('id-ID', { month: 'short' })}`
-    : '';
+  const formatTime = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes} WIB`;
+    } catch {
+      return '';
+    }
+  };
+
+  const isLoan = item.type === 'expense' && item.source === 'saving' && item.isSavingLoan;
+  const isSavingSpent = item.type === 'expense' && item.source === 'saving' && !item.isSavingLoan;
 
   return (
-    <View className="flex-row justify-between items-center bg-white p-4 rounded-2xl mb-2.5 border border-slate-200/80 shadow-sm">
+    <View className="flex-row justify-between items-center bg-white p-3.5 rounded-2xl mb-2 border border-slate-200/80">
       <View className="flex-row items-center flex-1 pr-3">
         <View
           className="w-10 h-10 rounded-xl items-center justify-center mr-3 border border-slate-100"
@@ -42,11 +53,23 @@ export default function ReportTransactionItem({
           <Text className="text-xl">{category?.icon || '💳'}</Text>
         </View>
         <View className="flex-1">
-          <Text className="text-slate-800 font-bold text-xs" numberOfLines={1}>
-            {category?.name || 'Lain-lain'}
-          </Text>
-          <Text className="text-slate-400 text-[11px] mt-0.5">
-            {formattedDate} {item.note ? `• ${item.note}` : ''}
+          <View className="flex-row items-center gap-1.5 flex-wrap">
+            <Text className="text-slate-800 font-bold text-xs" numberOfLines={1}>
+              {category?.name || 'Lain-lain'}
+            </Text>
+            {isLoan && (
+              <View className="bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-md">
+                <Text className="text-[8px] font-extrabold text-amber-800">Pinjam Tabungan</Text>
+              </View>
+            )}
+            {isSavingSpent && (
+              <View className="bg-sky-100 border border-sky-300 px-1.5 py-0.5 rounded-md">
+                <Text className="text-[8px] font-extrabold text-sky-800">Tabungan</Text>
+              </View>
+            )}
+          </View>
+          <Text className="text-slate-400 text-[10px] font-medium mt-0.5">
+            {formatTime(item.date)} {item.note ? `• ${item.note}` : ''}
           </Text>
         </View>
       </View>
@@ -55,10 +78,9 @@ export default function ReportTransactionItem({
           {sign} Rp {item.amount.toLocaleString('id-ID')}
         </Text>
         <TouchableOpacity onPress={() => onPressDelete(item.id)} className="p-1">
-          <Trash2 size={15} color="#94A3B8" />
+          <Trash2 size={14} color="#94A3B8" />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-

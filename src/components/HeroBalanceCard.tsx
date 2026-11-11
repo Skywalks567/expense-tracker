@@ -9,6 +9,8 @@ type Props = {
   totalExpenseThisMonth: number;
   totalIncomeThisMonth: number;
   totalSavingThisMonth: number;
+  rawSavingThisMonth?: number;
+  totalSavingLoan?: number;
   expenses: Expense[];
 };
 
@@ -16,11 +18,14 @@ export default function HeroBalanceCard({
   totalExpenseThisMonth,
   totalIncomeThisMonth,
   totalSavingThisMonth,
+  rawSavingThisMonth,
+  totalSavingLoan = 0,
   expenses,
 }: Props) {
   const { isBalanceHidden, toggleBalanceHidden } = useExpenseStore();
 
-  const netBalance = totalIncomeThisMonth - totalExpenseThisMonth - totalSavingThisMonth;
+  const cashSaved = rawSavingThisMonth !== undefined ? rawSavingThisMonth : totalSavingThisMonth;
+  const netBalance = totalIncomeThisMonth - totalExpenseThisMonth - cashSaved;
   const currentMonthYear = new Date().toLocaleDateString('id-ID', {
     month: 'long',
     year: 'numeric',
@@ -37,7 +42,7 @@ export default function HeroBalanceCard({
       <View className="flex-row justify-between items-start mb-2">
         <View>
           <Text className="text-[11px] text-indigo-200 font-bold uppercase tracking-wider">
-            Sisa Saldo Bulan Ini
+            Sisa Saldo Kas Bulan Ini
           </Text>
           <View className="flex-row items-center gap-2.5 mt-1">
             <Text className="text-2xl font-black tracking-tight text-white">
@@ -55,6 +60,15 @@ export default function HeroBalanceCard({
       </View>
 
       <HeroSparklineChart expenses={expenses} />
+
+      {totalSavingLoan > 0 && (
+        <View className="flex-row items-center justify-between bg-amber-500/15 border border-amber-500/30 px-3 py-1.5 rounded-xl mb-2">
+          <Text className="text-[10px] font-bold text-amber-300">📌 Pinjaman ke Tabungan</Text>
+          <Text className="text-[11px] font-black text-amber-300">
+            {isBalanceHidden ? '••••' : `Rp ${totalSavingLoan.toLocaleString('id-ID')}`}
+          </Text>
+        </View>
+      )}
 
       <HeroMetricChips
         totalIncomeThisMonth={totalIncomeThisMonth}

@@ -10,7 +10,7 @@ import {
   dbGetSetting,
   dbSetSetting,
 } from '../db/database';
-import { scheduleDailyAlarm } from '../services/notificationService';
+import { syncSmartAlarm } from '../services/notificationService';
 
 export type { TransactionType, Category, Expense, ExpenseState };
 
@@ -30,7 +30,7 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   setAlarmTime: async (time) => {
     set({ alarmTime: time });
     await dbSetSetting('alarmTime', time);
-    await scheduleDailyAlarm(time);
+    await syncSmartAlarm(time, get().expenses);
   },
   setBudgetMode: async (mode) => {
     set({ budgetMode: mode });
@@ -56,44 +56,57 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
         isLoading: false,
       });
 
-      await scheduleDailyAlarm(storedAlarm);
+      await syncSmartAlarm(storedAlarm, storedExpenses);
     } catch (err) {
       console.error('Error initializing SQLite store:', err);
       set({ isLoading: false });
     }
   },
 
-  addExpense: async (amount, categoryId, note, type) => {
-    const { categories } = get();
+  addExpense: async (amount, categoryId, note, type, source, isSavingLoan) => {
+    const { categories, alarmTime, expenses } = get();
     const cat = categories.find((c) => c.id === categoryId);
+    const resolvedType = type || cat?.type || 'expense';
     const newExpense: Expense = {
       id: `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       amount,
       categoryId,
       date: new Date().toISOString(),
       note: note || '',
-      type: type || cat?.type || 'expense',
+      type: resolvedType,
+      source: resolvedType === 'expense' ? (source || 'cash') : undefined,
+      isSavingLoan: resolvedType === 'expense' && source === 'saving' ? !!isSavingLoan : undefined,
     };
 
-    set((state) => ({ expenses: [newExpense, ...state.expenses] }));
+    const updated = [newExpense, ...expenses];
+    set({ expenses: updated });
     await dbInsertExpense(newExpense);
+    await syncSmartAlarm(alarmTime, updated);
   },
 
   deleteExpense: async (expenseId) => {
-    set((state) => ({ expenses: state.expenses.filter((e) => e.id !== expenseId) }));
+    const { alarmTime, expenses } = get();
+    const updated = expenses.filter((e) => e.id !== expenseId);
+    set({ expenses: updated });
     await dbDeleteExpense(expenseId);
+    await syncSmartAlarm(alarmTime, updated);
   },
 
   resetAllData: async () => {
+    const { alarmTime } = get();
     set({ expenses: [] });
     await dbResetExpenses();
+    await syncSmartAlarm(alarmTime, []);
   },
 
   importExpenses: async (importedExpenses) => {
     const valid = importedExpenses.filter((e) => e && e.amount > 0 && e.categoryId);
     if (valid.length === 0) return;
-    set((state) => ({ expenses: [...valid, ...state.expenses] }));
+    const { alarmTime, expenses } = get();
+    const updated = [...valid, ...expenses];
+    set({ expenses: updated });
     await dbImportExpenses(valid);
+    await syncSmartAlarm(alarmTime, updated);
   },
 
   setMonthlyBudget: async (amount) => {

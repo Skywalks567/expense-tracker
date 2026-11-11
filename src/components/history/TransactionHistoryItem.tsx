@@ -32,6 +32,17 @@ export default function TransactionHistoryItem({
     amountColor = 'text-sky-600';
     typeLabel = 'Tabungan';
     badgeBg = 'bg-sky-50 border-sky-100';
+  } else if (item.source === 'saving') {
+    sign = '-';
+    if (item.isSavingLoan) {
+      amountColor = 'text-amber-600';
+      typeLabel = '📌 Pinjam Tabungan';
+      badgeBg = 'bg-amber-50 border-amber-200';
+    } else {
+      amountColor = 'text-sky-700';
+      typeLabel = '🏦 Dari Tabungan';
+      badgeBg = 'bg-sky-50 border-sky-200';
+    }
   }
 
   const formatTime = (isoString: string) => {
