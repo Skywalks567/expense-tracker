@@ -24,6 +24,7 @@ export const defaultCategories: Category[] = [
   { id: 'olahraga', name: 'Olahraga', icon: '🏃‍♂️', color: '#84CC16', group: 'Kesehatan', type: 'expense' },
   { id: 'cicilan_hutang', name: 'Cicilan/Hutang', icon: '💳', color: '#F97316', group: 'Kewajiban', type: 'expense' },
   { id: 'sosial_sedekah', name: 'Sosial/Sedekah', icon: '🤲', color: '#06B6D4', group: 'Kewajiban', type: 'expense' },
+  { id: 'lainnya', name: 'Lainnya', icon: '🏷️', color: '#64748B', group: 'Lainnya', type: 'expense' },
 
   // --- PEMASUKAN (INCOME) ---
   { id: 'gaji', name: 'Gaji Bulanan', icon: '💼', color: '#10B981', group: 'Pemasukan', type: 'income' },
