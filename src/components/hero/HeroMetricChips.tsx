@@ -46,7 +46,7 @@ export default function HeroMetricChips({
           <PiggyBank size={13} color="#38BDF8" />
         </View>
         <View className="flex-1">
-          <Text className="text-[9px] text-slate-300 font-medium">Nabung</Text>
+          <Text className="text-[9px] text-slate-300 font-medium">Tabungan</Text>
           <Text className="text-[11px] font-bold text-sky-300" numberOfLines={1}>
             {isBalanceHidden ? '••••' : `${totalSavingThisMonth.toLocaleString('id-ID')}`}
           </Text>

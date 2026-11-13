@@ -36,6 +36,7 @@ export default function HomeScreen() {
     totalIncomeThisMonth,
     rawSavingThisMonth,
     totalSavingThisMonth,
+    currentCashBalance,
     totalSavingLoan,
   } = useDashboardFinancials(expenses);
 
@@ -69,6 +70,7 @@ export default function HomeScreen() {
           totalIncomeThisMonth={totalIncomeThisMonth}
           totalSavingThisMonth={totalSavingThisMonth}
           rawSavingThisMonth={rawSavingThisMonth}
+          currentCashBalance={currentCashBalance}
           totalSavingLoan={totalSavingLoan}
           expenses={expenses}
         />
@@ -86,6 +88,7 @@ export default function HomeScreen() {
           totalExpenseToday={totalExpenseToday}
           totalExpenseThisMonth={totalExpenseThisMonth}
           totalSavingThisMonth={totalSavingThisMonth}
+          currentCashBalance={currentCashBalance}
         />
 
         <ExpenseHistoryList

@@ -9,11 +9,13 @@ type Props = {
   totalExpenseToday: number;
   totalExpenseThisMonth: number;
   totalSavingThisMonth: number;
+  currentCashBalance?: number;
 };
 
 export default function BudgetWarningCard({
   budgetMode, monthlyBudget, totalIncomeThisMonth,
   totalExpenseToday, totalExpenseThisMonth, totalSavingThisMonth,
+  currentCashBalance,
 }: Props) {
   const isAuto = budgetMode === 'auto';
   const date = new Date();
@@ -22,15 +24,15 @@ export default function BudgetWarningCard({
   const remainingDays = Math.max(1, daysInMonth - currentDay + 1);
 
   // Kas riil awal hari ini (sebelum belanjaan hari ini)
-  const pastExpense = Math.max(0, totalExpenseThisMonth - totalExpenseToday);
-  const realCashPool = Math.max(0, totalIncomeThisMonth - pastExpense - totalSavingThisMonth);
-  const hasIncome = totalIncomeThisMonth > 0;
+  const realCashPool = currentCashBalance !== undefined
+    ? Math.max(0, currentCashBalance + totalExpenseToday)
+    : Math.max(0, totalIncomeThisMonth - Math.max(0, totalExpenseThisMonth - totalExpenseToday) - totalSavingThisMonth);
 
-  // Guardrail Manual: jika kas riil awal hari < budget manual, batasi dengan kas riil
-  const isCashCapped = !isAuto && hasIncome && realCashPool < monthlyBudget;
+  const hasFunds = currentCashBalance !== undefined ? (realCashPool > 0 || totalIncomeThisMonth > 0) : totalIncomeThisMonth > 0;
+  const isCashCapped = !isAuto && hasFunds && realCashPool < monthlyBudget;
 
   const pool = isAuto ? realCashPool : (isCashCapped ? realCashPool : monthlyBudget);
-  const isBudgetValid = isAuto ? hasIncome : monthlyBudget > 0;
+  const isBudgetValid = isAuto ? hasFunds : monthlyBudget > 0;
   const dailyBudget = isBudgetValid ? Math.floor(pool / remainingDays) : 0;
 
   const remaining = dailyBudget - totalExpenseToday;
@@ -72,34 +74,29 @@ export default function BudgetWarningCard({
           </View>
         </View>
 
-        <View className={`px-2 py-0.5 rounded-md ${badgeBg}`}>
-          <Text className={`text-[10px] font-extrabold ${badgeText}`}>
-            {isBudgetValid ? remainingText : (isAuto ? 'Belum Ada Pemasukan' : 'Budget Belum Diatur')}
-          </Text>
+        <View className={`px-2 py-1 rounded-lg ${badgeBg}`}>
+          <Text className={`text-[10px] font-extrabold ${badgeText}`}>{remainingText}</Text>
         </View>
       </View>
 
-      <View className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-2 border border-slate-200">
+      <View className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-2">
         <View className={`h-full rounded-full ${barBg}`} style={{ width: `${percentage}%` }} />
       </View>
 
       <View className="flex-row justify-between items-center">
-        <Text className="text-[10px] text-slate-500 font-medium">
-          Terpakai: <Text className="text-slate-800 font-bold">Rp {totalExpenseToday.toLocaleString('id-ID')}</Text>
+        <Text className="text-[10px] font-bold text-slate-400">
+          Terpakai: Rp {totalExpenseToday.toLocaleString('id-ID')}
         </Text>
-        <Text className="text-[10px] text-slate-500 font-medium">
-          Jatah Hari Ini: <Text className="text-slate-800 font-bold">Rp {dailyBudget.toLocaleString('id-ID')}</Text>
-          {isBudgetValid && (
-            <Text className="text-[9px] text-slate-400"> ({remainingDays} hari lagi)</Text>
-          )}
+        <Text className="text-[10px] font-bold text-slate-600">
+          Batas: Rp {dailyBudget.toLocaleString('id-ID')}
         </Text>
       </View>
 
       {isCashCapped && (
-        <View className="mt-2 pt-1.5 border-t border-amber-100 flex-row items-center gap-1">
+        <View className="flex-row items-center gap-1 mt-2 pt-2 border-t border-slate-100">
           <AlertTriangle size={11} color="#D97706" />
-          <Text className="text-[9px] text-amber-700 font-medium flex-1">
-            Dibatasi karena sisa saldo lebih kecil dari budget
+          <Text className="text-[9px] font-medium text-amber-700">
+            Disesuaikan ke kas riil (Rp {realCashPool.toLocaleString('id-ID')}) agar tidak defisit
           </Text>
         </View>
       )}

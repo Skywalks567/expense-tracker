@@ -10,6 +10,7 @@ type Props = {
   totalIncomeThisMonth: number;
   totalSavingThisMonth: number;
   rawSavingThisMonth?: number;
+  currentCashBalance?: number;
   totalSavingLoan?: number;
   expenses: Expense[];
 };
@@ -19,13 +20,17 @@ export default function HeroBalanceCard({
   totalIncomeThisMonth,
   totalSavingThisMonth,
   rawSavingThisMonth,
+  currentCashBalance,
   totalSavingLoan = 0,
   expenses,
 }: Props) {
   const { isBalanceHidden, toggleBalanceHidden } = useExpenseStore();
 
   const cashSaved = rawSavingThisMonth !== undefined ? rawSavingThisMonth : totalSavingThisMonth;
-  const netBalance = totalIncomeThisMonth - totalExpenseThisMonth - cashSaved;
+  const netBalance = currentCashBalance !== undefined
+    ? currentCashBalance
+    : totalIncomeThisMonth - totalExpenseThisMonth - cashSaved;
+
   const currentMonthYear = new Date().toLocaleDateString('id-ID', {
     month: 'long',
     year: 'numeric',
@@ -42,7 +47,7 @@ export default function HeroBalanceCard({
       <View className="flex-row justify-between items-start mb-2">
         <View>
           <Text className="text-[11px] text-indigo-200 font-bold uppercase tracking-wider">
-            Sisa Saldo Kas Bulan Ini
+            Sisa Saldo Kas
           </Text>
           <View className="flex-row items-center gap-2.5 mt-1">
             <Text className="text-2xl font-black tracking-tight text-white">
